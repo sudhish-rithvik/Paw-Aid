@@ -1,0 +1,27 @@
+# Python / Backend
+backend/venv/
+backend/.env
+backend/uploads/
+backend/__pycache__/
+*.pyc
+
+# Flutter / Dart
+flutter_app/.dart_tool/
+flutter_app/.flutter-plugins-dependencies
+flutter_app/.pub-cache/
+flutter_app/.pub/
+flutter_app/build/
+flutter_app/android/app/debug/
+flutter_app/android/app/profile/
+flutter_app/android/app/release/
+flutter_app/ios/Flutter/.last_build_id
+
+# IDEs and System files
+.idea/
+*.iml
+*.ipr
+*.iws
+.DS_Store
+*.log
+*.hprof
+Thumbs.db

@@ -1,0 +1,85 @@
+name: paw_aid
+description: PAW-AID — AI-powered emergency animal rescue platform
+publish_to: none
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+  flutter: '>=3.22.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # ── State Management ──────────────────────────────────────
+  flutter_riverpod: ^2.5.1
+  riverpod_annotation: ^2.3.5
+
+  # ── Navigation ────────────────────────────────────────────
+  go_router: ^14.2.0
+
+  # ── Backend / API ─────────────────────────────────────────
+  dio: ^5.4.3
+  http: ^1.2.1
+
+  # ── Supabase (Auth + DB + Storage) ───────────────────────
+  supabase_flutter: ^2.5.6
+
+  # ── Firebase ──────────────────────────────────────────────
+  firebase_core: ^3.3.0
+  firebase_messaging: ^15.0.3
+  flutter_local_notifications: ^17.2.1
+
+  # ── Maps (OpenStreetMap — 100% Free) ─────────────────────
+  flutter_map: ^7.0.2
+  flutter_map_heatmap: ^0.0.8
+  latlong2: ^0.9.1
+
+  # ── Camera / Image ────────────────────────────────────────
+  image_picker: ^1.1.2
+  flutter_image_compress: ^2.3.0
+  cached_network_image: ^3.3.1
+
+  # ── Location ──────────────────────────────────────────────
+  geolocator: ^12.0.0
+  flutter_background_service: ^5.0.5
+
+  # ── Charts ────────────────────────────────────────────────
+  fl_chart: ^0.68.0
+
+  # ── QR Code ───────────────────────────────────────────────
+  qr_flutter: ^4.1.0
+  mobile_scanner: ^5.1.1
+
+  # ── UI / UX ───────────────────────────────────────────────
+  google_fonts: ^6.2.1
+  lottie: ^3.1.0
+  shimmer: ^3.0.0
+  flutter_animate: ^4.5.0
+  permission_handler: ^11.3.1
+  cupertino_icons: ^1.0.8
+
+  # ── Utilities ─────────────────────────────────────────────
+  intl: ^0.19.0
+  shared_preferences: ^2.3.1
+  flutter_secure_storage: ^9.2.2
+  uuid: ^4.4.0
+  timeago: ^3.6.1
+  url_launcher: ^6.3.0
+  path_provider: ^2.1.4
+  image: ^4.2.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  riverpod_generator: ^2.4.3
+  build_runner: ^2.4.11
+  json_serializable: ^6.8.0
+  json_annotation: ^4.9.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/animations/
