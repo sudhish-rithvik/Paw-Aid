@@ -35,7 +35,7 @@ class RescueListTile extends StatelessWidget {
         ? DateTime.tryParse(caseData['created_at'] as String)
         : null;
 
-    final etaSec = caseData['eta_seconds'] as int?;
+    final etaSec = (caseData['eta_seconds'] as num?)?.toInt();
     final distM = (caseData['distance_metres'] as num?)?.toDouble();
 
     return InkWell(

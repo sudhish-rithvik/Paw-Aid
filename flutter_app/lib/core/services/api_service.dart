@@ -1,5 +1,3 @@
-// lib/core/services/api_service.dart
-import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide MultipartFile;
 
@@ -160,8 +158,8 @@ class ApiService {
   static Future<Map<String, dynamic>> getAnalytics({String? ngoId}) async {
     final params = <String, dynamic>{};
     if (ngoId != null) params['ngo_id'] = ngoId;
-    final response =
-        await client.get('/analytics', queryParameters: params.isEmpty ? null : params);
+    final response = await client.get('/analytics',
+        queryParameters: params.isEmpty ? null : params);
     return response.data as Map<String, dynamic>;
   }
 
@@ -206,7 +204,8 @@ class ApiService {
             contentType: DioMediaType('application', 'pdf'),
           ),
         ));
-        formData.fields.add(MapEntry('document_types[$i]', doc['type'] as String? ?? 'other'));
+        formData.fields.add(
+            MapEntry('document_types[$i]', doc['type'] as String? ?? 'other'));
       }
     }
     final response = await client.post('/ngo/register', data: formData);
@@ -283,7 +282,7 @@ class ApiService {
       if (routes == null || routes.isEmpty) return [];
       final coords = (routes[0] as Map)['geometry']['coordinates'] as List;
       return coords
-          .map((c) => [(c as List)[1] as double, c[0] as double])
+          .map((c) => [(c[1] as num).toDouble(), (c[0] as num).toDouble()])
           .toList();
     } catch (e) {
       return [];

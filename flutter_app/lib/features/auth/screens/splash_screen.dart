@@ -27,25 +27,17 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     await Future.delayed(const Duration(milliseconds: 2500));
     if (!mounted) return;
 
-    final session = Supabase.instance.client.auth.currentSession;
-    if (session == null) {
-      context.go('/login');
-    } else {
-      // The router redirect should handle this, but let's be explicit to avoid getting stuck
-      try {
+    try {
+      final session = Supabase.instance.client.auth.currentSession;
+      if (session == null) {
+        context.go('/login');
+      } else {
         final role = ref.read(userRoleProvider);
         _navigateByRole(role);
-      } catch (_) {
-        // Fallback check
-        final profile = await Supabase.instance.client
-            .from('profiles')
-            .select('role')
-            .eq('id', session.user.id)
-            .maybeSingle();
-        final role = profile?['role'] as String? ?? 'citizen';
-        if (mounted) {
-          _navigateByRole(role);
-        }
+      }
+    } catch (_) {
+      if (mounted) {
+        context.go('/login');
       }
     }
   }

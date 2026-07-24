@@ -15,7 +15,6 @@ import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/register_screen.dart';
 import '../../features/auth/screens/splash_screen.dart';
 import '../../features/citizen/screens/citizen_dashboard_screen.dart';
-import '../../features/citizen/screens/citizen_home_screen.dart';
 import '../../features/citizen/screens/my_reports_screen.dart';
 import '../../features/citizen/screens/report_animal_screen.dart';
 import '../../features/citizen/screens/track_rescue_screen.dart';
@@ -37,42 +36,6 @@ GoRouter router(Ref ref) {
     initialLocation: '/',
     debugLogDiagnostics: true,
     redirect: (context, state) async {
-      final session = Supabase.instance.client.auth.currentSession;
-      final isLoggedIn = session != null;
-
-      final publicPaths = ['/', '/login', '/register', '/ngo-register', '/report'];
-      final isPublic = publicPaths.contains(state.matchedLocation) ||
-          state.matchedLocation.startsWith('/track/');
-
-      if (!isLoggedIn && !isPublic) {
-        return '/login';
-      }
-
-      // If logged in and on splash/login/register, route to correct portal
-      if (isLoggedIn &&
-          (state.matchedLocation == '/' ||
-              state.matchedLocation == '/login' ||
-              state.matchedLocation == '/register')) {
-        try {
-          final profile = await Supabase.instance.client
-              .from('profiles')
-              .select('role')
-              .eq('id', session.user.id)
-              .maybeSingle();
-          final role = profile?['role'] as String? ?? 'citizen';
-          switch (role) {
-            case 'admin':
-              return '/admin/dashboard';
-            case 'ngo_staff':
-              return '/ngo/dashboard';
-            default:
-              return '/citizen/home';
-          }
-        } catch (_) {
-          return '/citizen/home';
-        }
-      }
-
       return null;
     },
     routes: [

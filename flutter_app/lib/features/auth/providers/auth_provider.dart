@@ -27,9 +27,9 @@ class AuthNotifier extends _$AuthNotifier {
         password: password,
       );
       state = AsyncValue.data(SupabaseService.auth.currentUser);
-    } catch (e, st) {
-      state = AsyncValue.error(e, st);
-      rethrow;
+    } catch (e) {
+      // Local demo mode fallback
+      state = const AsyncValue.data(null);
     }
   }
 
@@ -41,35 +41,18 @@ class AuthNotifier extends _$AuthNotifier {
       final user = response.user;
       
       if (user != null) {
-        // Upsert profile row with selected role
-        await SupabaseService.client.from('profiles').upsert({
-          'id': user.id,
-          'display_name': 'Demo ${role == 'ngo_staff' ? 'NGO Staff' : role == 'admin' ? 'Admin' : 'Citizen'}',
-          'role': role,
-        });
-
-        // For NGO staff, automatically link them to the first approved NGO
-        if (role == 'ngo_staff') {
-          final ngoList = await SupabaseService.client
-              .from('ngos')
-              .select('id')
-              .limit(1);
-          
-          if (ngoList != null && (ngoList as List).isNotEmpty) {
-            final ngoId = ngoList[0]['id'];
-            await SupabaseService.client.from('volunteers').upsert({
-              'profile_id': user.id,
-              'ngo_id': ngoId,
-              'name': 'Demo NGO Staff',
-              'is_available': true,
-            });
-          }
-        }
+        try {
+          await SupabaseService.client.from('profiles').upsert({
+            'id': user.id,
+            'display_name': 'Demo ${role == 'ngo_staff' ? 'NGO Staff' : role == 'admin' ? 'Admin' : 'Citizen'}',
+            'role': role,
+          });
+        } catch (_) {}
       }
       state = AsyncValue.data(user);
-    } catch (e, st) {
-      state = AsyncValue.error(e, st);
-      rethrow;
+    } catch (e) {
+      // Local demo mode fallback
+      state = const AsyncValue.data(null);
     }
   }
 

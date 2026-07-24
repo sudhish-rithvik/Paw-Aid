@@ -186,8 +186,8 @@ class _NGODashboardScreenState extends ConsumerState<NGODashboardScreen> {
                   child: queueAsync.when(
                     data: (cases) {
                       final ngo = ngoAsync.valueOrNull;
-                      final ngoLat = ngo != null ? ngo['lat'] as double? : null;
-                      final ngoLng = ngo != null ? ngo['lng'] as double? : null;
+                      final ngoLat = ngo != null ? (ngo['lat'] as num?)?.toDouble() : null;
+                      final ngoLng = ngo != null ? (ngo['lng'] as num?)?.toDouble() : null;
                       
                       final centerLocation = ngoLat != null && ngoLng != null
                           ? LatLng(ngoLat, ngoLng)
@@ -209,8 +209,8 @@ class _NGODashboardScreenState extends ConsumerState<NGODashboardScreen> {
 
                       // Add Cases Markers
                       for (final c in cases) {
-                        final lat = c['lat'] as double;
-                        final lng = c['lng'] as double;
+                        final lat = (c['lat'] as num).toDouble();
+                        final lng = (c['lng'] as num).toDouble();
                         final priority = c['priority_level'] as String? ?? 'medium';
                         final assignedNgoId = c['assigned_ngo_id'] as String?;
 

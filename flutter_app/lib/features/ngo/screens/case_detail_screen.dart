@@ -50,10 +50,10 @@ class _CaseDetailScreenState extends ConsumerState<CaseDetailScreen> {
           _isLoadingRoute = true;
         });
         
-        final fromLat = ngo['lat'] as double;
-        final fromLng = ngo['lng'] as double;
-        final toLat = detail['lat'] as double;
-        final toLng = detail['lng'] as double;
+        final fromLat = (ngo['lat'] as num).toDouble();
+        final fromLng = (ngo['lng'] as num).toDouble();
+        final toLat = (detail['lat'] as num).toDouble();
+        final toLng = (detail['lng'] as num).toDouble();
 
         final routeData = await ApiService.getRoute(
           fromLat: fromLat,
@@ -113,8 +113,8 @@ class _CaseDetailScreenState extends ConsumerState<CaseDetailScreen> {
 
     final detail = _caseDetail!;
     final caseId = detail['id'] as String;
-    final lat = detail['lat'] as double;
-    final lng = detail['lng'] as double;
+    final lat = (detail['lat'] as num).toDouble();
+    final lng = (detail['lng'] as num).toDouble();
     final address = detail['address'] as String? ?? 'Unknown location';
     final notes = detail['notes'] as String? ?? 'No reporter notes provided.';
     // ignore: unused_local_variable
@@ -394,16 +394,14 @@ class _CaseDetailScreenState extends ConsumerState<CaseDetailScreen> {
                           ),
                         );
                         if (confirm == true) {
-                          final router = GoRouter.of(context);
-                          final messenger = ScaffoldMessenger.of(context);
                           try {
                             await ref.read(rescueQueueProvider.notifier).accept(caseId);
                             if (mounted) {
-                              router.push('/ngo/active/$caseId');
+                              context.push('/ngo/active/$caseId');
                             }
                           } catch (e) {
                             if (mounted) {
-                              messenger.showSnackBar(
+                              ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(content: Text('Failed to accept case: $e')),
                               );
                             }

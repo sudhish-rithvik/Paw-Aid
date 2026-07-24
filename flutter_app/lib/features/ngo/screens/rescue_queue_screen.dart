@@ -133,7 +133,7 @@ class _RescueQueueScreenState extends ConsumerState<RescueQueueScreen> {
     final caseId = c['id'] as String;
     final priority = c['priority_level'] as String? ?? 'medium';
     final address = c['address'] as String? ?? 'Unknown location';
-    final aiScore = c['ai_score'] as double? ?? 0.0;
+    final aiScore = (c['ai_score'] as num?)?.toDouble() ?? 0.0;
     final assignedNgoId = c['assigned_ngo_id'] as String?;
     final dateStr = c['created_at'] != null
         ? DateFormat.jm().add_yMMMd().format(DateTime.parse(c['created_at']))

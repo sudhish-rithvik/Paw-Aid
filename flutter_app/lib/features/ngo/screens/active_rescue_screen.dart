@@ -1,17 +1,14 @@
 // lib/features/ngo/screens/active_rescue_screen.dart
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/constants/api_constants.dart';
 import '../../../core/services/api_service.dart';
-import '../../../core/services/supabase_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../providers/ngo_provider.dart';
 
@@ -53,10 +50,10 @@ class _ActiveRescueScreenState extends ConsumerState<ActiveRescueScreen> {
       // Attempt OSRM route fetch
       final ngo = await ref.read(currentNGOProvider.future);
       if (ngo != null && ngo['lat'] != null && ngo['lng'] != null) {
-        final fromLat = ngo['lat'] as double;
-        final fromLng = ngo['lng'] as double;
-        final toLat = detail['lat'] as double;
-        final toLng = detail['lng'] as double;
+        final fromLat = (ngo['lat'] as num).toDouble();
+        final fromLng = (ngo['lng'] as num).toDouble();
+        final toLat = (detail['lat'] as num).toDouble();
+        final toLng = (detail['lng'] as num).toDouble();
 
         final routeData = await ApiService.getRoute(
           fromLat: fromLat,
@@ -240,8 +237,8 @@ class _ActiveRescueScreenState extends ConsumerState<ActiveRescueScreen> {
     }
 
     final detail = _caseDetail!;
-    final lat = detail['lat'] as double;
-    final lng = detail['lng'] as double;
+    final lat = (detail['lat'] as num).toDouble();
+    final lng = (detail['lng'] as num).toDouble();
     final address = detail['address'] as String? ?? 'Unknown location';
     final notes = detail['notes'] as String? ?? '';
     final statusStr = detail['status'] as String? ?? 'accepted';

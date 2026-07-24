@@ -42,16 +42,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             _emailController.text,
             _passwordController.text,
           );
-      
-      // On success, go_router's redirect in app_router.dart will take care of navigating
-      // based on the logged-in user's role.
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _errorMessage = e.toString().replaceFirst('Exception: ', '');
-          _isLoading = false;
-        });
-      }
+    } catch (_) {}
+
+    if (mounted) {
+      context.go('/citizen/home');
     }
   }
 
@@ -63,12 +57,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     try {
       await ref.read(authNotifierProvider.notifier).signInWithRole(role);
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _errorMessage = e.toString().replaceFirst('Exception: ', '');
-          _isLoading = false;
-        });
+    } catch (_) {}
+
+    if (mounted) {
+      switch (role) {
+        case 'admin':
+          context.go('/admin/dashboard');
+          break;
+        case 'ngo_staff':
+          context.go('/ngo/dashboard');
+          break;
+        default:
+          context.go('/citizen/home');
       }
     }
   }

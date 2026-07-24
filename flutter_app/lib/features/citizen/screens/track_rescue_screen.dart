@@ -53,8 +53,8 @@ class _TrackRescueScreenState extends ConsumerState<TrackRescueScreen> {
       ),
       body: caseAsync.when(
         data: (caseData) {
-          final lat = caseData['lat'] as double;
-          final lng = caseData['lng'] as double;
+          final lat = (caseData['lat'] as num).toDouble();
+          final lng = (caseData['lng'] as num).toDouble();
           final animalLocation = LatLng(lat, lng);
           final statusStr = caseData['status'] as String? ?? 'pending';
           final status = CaseStatus.fromString(statusStr);

@@ -3,8 +3,6 @@ import 'dart:typed_data';
 import 'package:supabase_flutter/supabase_flutter.dart';
 export 'dart:typed_data' show Uint8List;
 
-import '../constants/api_constants.dart';
-
 /// Singleton Supabase client wrapper.
 class SupabaseService {
   SupabaseService._();

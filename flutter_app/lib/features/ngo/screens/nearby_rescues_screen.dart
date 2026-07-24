@@ -244,7 +244,7 @@ class _NearbyRescuesScreenState extends ConsumerState<NearbyRescuesScreen> {
     final caseId = item['id'] as String;
     final priority = item['priority_level'] as String? ?? 'medium';
     final address = item['address'] as String? ?? 'Unknown location';
-    final distance = item['distance_km'] as double? ?? 0.0;
+    final distance = (item['distance_km'] as num?)?.toDouble() ?? 0.0;
     
     // AI details
     final animal = item['animal'] as String? ?? 'Animal';
@@ -325,8 +325,8 @@ class _NearbyRescuesScreenState extends ConsumerState<NearbyRescuesScreen> {
 
   Widget _buildMap(List<dynamic> list) {
     final markers = list.map((c) {
-      final lat = c['lat'] as double;
-      final lng = c['lng'] as double;
+      final lat = (c['lat'] as num).toDouble();
+      final lng = (c['lng'] as num).toDouble();
       final priority = c['priority_level'] as String? ?? 'medium';
       
       final priorityColor = switch (priority) {
@@ -378,7 +378,7 @@ class _NearbyRescuesScreenState extends ConsumerState<NearbyRescuesScreen> {
   void _showQuickView(BuildContext context, Map<String, dynamic> c) {
     final priority = c['priority_level'] as String? ?? 'medium';
     final address = c['address'] as String? ?? 'Unknown location';
-    final distance = c['distance_km'] as double? ?? 0.0;
+    final distance = (c['distance_km'] as num?)?.toDouble() ?? 0.0;
     final caseId = c['id'] as String;
 
     showModalBottomSheet(
