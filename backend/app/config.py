@@ -19,8 +19,9 @@ class Settings(BaseSettings):
     supabase_url: str = ""
     supabase_service_key: str = ""
 
-    # ── HuggingFace ───────────────────────────────────────────────────────────
+    # ── HuggingFace & Roboflow ────────────────────────────────────────────────
     hf_api_key: str = ""
+    roboflow_api_key: str = ""
 
     # ── Firebase ──────────────────────────────────────────────────────────────
     firebase_credentials_path: str = ""

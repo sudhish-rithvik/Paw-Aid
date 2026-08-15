@@ -29,7 +29,7 @@ from app.routers.auth import get_current_user
 from app.services.image_proc import compress_image, preprocess_image
 from app.services.duplicate_detector import find_duplicate_case
 from app.services.nominatim_service import reverse_geocode
-from app.services.hf_inference import analyze_animal_image
+from app.services.roboflow_inference import analyze_animal_image_roboflow
 from app.services.priority_engine import compute_priority
 from app.services.ngo_matcher import find_best_ngo
 from app.services.fcm_service import send_case_update
@@ -52,7 +52,7 @@ async def _run_ai_pipeline(
 ) -> None:
     """
     Background task that:
-    1. Runs the HuggingFace vision analysis.
+    1. Runs the Roboflow vision analysis.
     2. Saves results to `ai_analyses`.
     3. Computes priority and updates `rescue_cases`.
     4. Finds the best NGO and assigns it.
@@ -63,7 +63,7 @@ async def _run_ai_pipeline(
 
     try:
         # ── 1. AI Analysis ────────────────────────────────────────────────────
-        raw = await analyze_animal_image(image_bytes)
+        raw = await analyze_animal_image_roboflow(image_bytes)
         raw_copy = dict(raw)
         raw_response = raw_copy.pop("_raw_response", None)
 

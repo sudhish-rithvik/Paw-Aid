@@ -4,8 +4,8 @@ class ApiConstants {
   // Physical device → use your PC's LAN IP (run `ipconfig` on Windows → IPv4 Address)
   // Example: 'http://192.168.1.42:8000/api'
   static const String baseUrl = 'http://192.168.1.3:8080/api';
-  static const String supabaseUrl = 'https://ivkrlcxmbwcdnvkjpvpj.supabase.co';
-  static const String supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml2a3JsY3htYndjZG52a2pwdnBqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NDY2MjAsImV4cCI6MjA5ODAyMjYyMH0.xlsE_Bn-AtJkxcVbLORjpLZHzTWaucQ-c90UOIpJcIE';
+  static const String supabaseUrl = 'https://jqrdaepaetwulsqfletb.supabase.co';
+  static const String supabaseAnonKey = 'sb_publishable_LUiFehvw5I2cVCcZhSIRaw_AncNcQ9i';
 
   // Supabase storage bucket names
   static const String animalImagesBucket = 'animal-images';
