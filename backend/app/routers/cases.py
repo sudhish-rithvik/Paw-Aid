@@ -76,6 +76,42 @@ def _get_reporter_fcm(supabase, reporter_id: Optional[str]) -> Optional[str]:
 # Endpoints
 # ─────────────────────────────────────────────────────────────────────────────
 
+@router.get("/citizen/reports")
+async def get_citizen_reports(
+    profile: dict = Depends(get_current_user_profile),
+):
+    """
+    Get all rescue cases reported by the current citizen.
+    """
+    if profile.get("role") != "citizen":
+        raise HTTPException(status_code=403, detail="Only citizens can access their reports via this endpoint.")
+
+    supabase = get_supabase()
+
+    try:
+        resp = (
+            supabase.table("rescue_cases")
+            .select(
+                "id, status, priority_level, lat, lng, address, created_at, "
+                "assigned_ngo_id, notes, image_path"
+            )
+            .eq("reporter_id", profile["id"])
+            .order("created_at", desc=True)
+            .execute()
+        )
+        
+        cases = resp.data or []
+        
+        # Hydrate with AI summary for UI
+        for case in cases:
+            ai = _fetch_ai_analysis(supabase, case["id"])
+            case["ai_analysis"] = ai
+
+        return {"cases": cases}
+    except Exception as exc:
+        logger.error("get_citizen_reports error: %s", exc)
+        raise HTTPException(status_code=500, detail="Failed to fetch citizen reports.")
+
 @router.get("/ngo/queue")
 async def get_ngo_queue(
     ngo_id: Optional[str] = None,

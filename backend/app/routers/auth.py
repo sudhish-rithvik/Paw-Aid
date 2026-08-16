@@ -69,6 +69,24 @@ async def get_current_user(
         )
 
     token = authorization.split(" ", 1)[1]
+    
+    # ── Dev Bypass ────────────────────────────────────────────────────────
+    if token.startswith("dev-token-"):
+        role = token.split("dev-token-")[1]
+        mock_id = "00000000-0000-0000-0000-000000000003" # citizen
+        if role == "ngo_staff":
+            mock_id = "00000000-0000-0000-0000-000000000002"
+        elif role == "admin":
+            mock_id = "00000000-0000-0000-0000-000000000001"
+            
+        class MockUser:
+            def __init__(self, uid, uemail):
+                self.id = uid
+                self.email = uemail
+        mock_email = "dev@pawaid.com"
+        return {"user": MockUser(mock_id, mock_email), "token": token}
+    # ──────────────────────────────────────────────────────────────────────
+    
     supabase = get_supabase()
 
     try:

@@ -9,6 +9,7 @@ import '../../../core/constants/api_constants.dart';
 import '../../../core/services/api_service.dart';
 import '../../../core/services/supabase_service.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../citizen/widgets/bounding_box_image.dart';
 import '../providers/ngo_provider.dart';
 
 class CaseDetailScreen extends ConsumerStatefulWidget {
@@ -153,15 +154,13 @@ class _CaseDetailScreenState extends ConsumerState<CaseDetailScreen> {
           children: [
             // Animal Photo
             if (imagePath != null && imagePath.isNotEmpty)
-              Image.network(
-                SupabaseService.getPublicUrl(ApiConstants.animalImagesBucket, imagePath),
+              Container(
                 height: 240,
                 width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
-                  height: 240,
-                  color: AppColors.surface,
-                  child: const Icon(Icons.broken_image, size: 48, color: AppColors.textHint),
+                color: AppColors.surface,
+                child: BoundingBoxImage(
+                  imageUrl: SupabaseService.getPublicUrl(ApiConstants.animalImagesBucket, imagePath),
+                  rawResponse: (aiAnalysis?['raw_response'] as Map?)?.cast<String, dynamic>() ?? {},
                 ),
               )
             else
@@ -212,7 +211,7 @@ class _CaseDetailScreenState extends ConsumerState<CaseDetailScreen> {
                           children: [
                             const Text('AI Confidence', style: TextStyle(fontSize: 10, color: AppColors.textSecondary)),
                             const SizedBox(height: 2),
-                            Text('${confidence.toStringAsFixed(1)}%', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.secondary)),
+                            Text('${(confidence * 100).toStringAsFixed(0)}%', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.secondary)),
                           ],
                         ),
                       ),

@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:geocoding/geocoding.dart';
 
 import '../../../core/services/api_service.dart';
 import '../../../core/services/location_service.dart';
@@ -25,6 +26,7 @@ class _ReportAnimalScreenState extends ConsumerState<ReportAnimalScreen> {
   final ImagePicker _picker = ImagePicker();
   XFile? _imageFile;
   LatLng? _currentLocation;
+  String? _currentAddress;
   bool _isLocating = false;
   bool _isSubmitting = false;
   String? _errorMessage;
@@ -49,9 +51,22 @@ class _ReportAnimalScreenState extends ConsumerState<ReportAnimalScreen> {
 
     try {
       final loc = await LocationService.getCurrentLocation();
+      String? address;
+      if (loc != null) {
+        try {
+          final placemarks = await placemarkFromCoordinates(loc.latitude, loc.longitude);
+          if (placemarks.isNotEmpty) {
+            final p = placemarks.first;
+            final parts = [p.street, p.subLocality, p.locality, p.administrativeArea].where((e) => e != null && e.isNotEmpty).toList();
+            address = parts.join(', ');
+          }
+        } catch (_) {}
+      }
+
       if (mounted) {
         setState(() {
           _currentLocation = loc;
+          _currentAddress = address;
           _isLocating = false;
         });
       }
@@ -109,6 +124,7 @@ class _ReportAnimalScreenState extends ConsumerState<ReportAnimalScreen> {
         imagePath: _imageFile!.path,
         lat: _currentLocation!.latitude,
         lng: _currentLocation!.longitude,
+        address: _currentAddress,
         notes: _notesController.text.trim(),
         userId: userId,
       );
@@ -335,7 +351,7 @@ class _ReportAnimalScreenState extends ConsumerState<ReportAnimalScreen> {
                 const SizedBox(height: 4),
                 Text(
                   _currentLocation != null
-                      ? 'Lat: ${_currentLocation!.latitude.toStringAsFixed(5)}, Lng: ${_currentLocation!.longitude.toStringAsFixed(5)}'
+                      ? (_currentAddress ?? 'Lat: ${_currentLocation!.latitude.toStringAsFixed(5)}, Lng: ${_currentLocation!.longitude.toStringAsFixed(5)}')
                       : 'Retrieving coordinates...',
                   style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
                 ),

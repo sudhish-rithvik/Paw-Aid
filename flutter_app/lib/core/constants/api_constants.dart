@@ -3,7 +3,7 @@
 class ApiConstants {
   // Physical device → use your PC's LAN IP (run `ipconfig` on Windows → IPv4 Address)
   // Example: 'http://192.168.1.42:8000/api'
-  static const String baseUrl = 'http://192.168.1.3:8080/api';
+  static const String baseUrl = 'http://192.168.1.7:8000/api';
   static const String supabaseUrl = 'https://jqrdaepaetwulsqfletb.supabase.co';
   static const String supabaseAnonKey = 'sb_publishable_LUiFehvw5I2cVCcZhSIRaw_AncNcQ9i';
 

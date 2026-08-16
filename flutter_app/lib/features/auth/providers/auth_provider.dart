@@ -2,6 +2,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/services/supabase_service.dart';
 
@@ -33,25 +34,25 @@ class AuthNotifier extends _$AuthNotifier {
     }
   }
 
-  /// Sign in anonymously and assign a specific role (Bypasses email/password login).
+  /// Sign in with predefined dummy accounts for the demo (Bypasses typing email/password).
   Future<void> signInWithRole(String role) async {
     state = const AsyncValue.loading();
     try {
-      final response = await SupabaseService.auth.signInAnonymously();
-      final user = response.user;
+      String email = 'citizen@pawaid.com';
+      if (role == 'admin') email = 'admin@pawaid.com';
+      if (role == 'ngo_staff') email = 'ngo@pawaid.com';
       
-      if (user != null) {
-        try {
-          await SupabaseService.client.from('profiles').upsert({
-            'id': user.id,
-            'display_name': 'Demo ${role == 'ngo_staff' ? 'NGO Staff' : role == 'admin' ? 'Admin' : 'Citizen'}',
-            'role': role,
-          });
-        } catch (_) {}
-      }
-      state = AsyncValue.data(user);
+      final response = await SupabaseService.auth.signInWithPassword(
+        email: email,
+        password: 'password123',
+      );
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('bypass_role', role);
+      state = AsyncValue.data(response.user);
     } catch (e) {
       // Local demo mode fallback
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('bypass_role', role);
       state = const AsyncValue.data(null);
     }
   }
@@ -95,6 +96,8 @@ class AuthNotifier extends _$AuthNotifier {
   Future<void> signOut() async {
     state = const AsyncValue.loading();
     try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('bypass_role');
       await SupabaseService.auth.signOut();
       state = const AsyncValue.data(null);
     } catch (e, st) {

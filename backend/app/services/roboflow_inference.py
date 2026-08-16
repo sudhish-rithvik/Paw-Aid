@@ -23,7 +23,7 @@ _MOCK_RESULT: Dict[str, Any] = {
     "visible_injuries": ["laceration", "road rash"],
     "mobility": "Unknown",
     "pain_level": "Unknown",
-    "severity": "high",
+    "severity": "High",
     "confidence": 0.87,
     "recommended_action": "Approach with caution and transport to vet.",
     "reason": "Roboflow detection found potential injuries.",
@@ -96,11 +96,11 @@ async def analyze_animal_image_roboflow(image_bytes: bytes) -> Dict[str, Any]:
     animal = animal_classes[0] if animal_classes else "Unknown Animal"
     
     # Severity heuristic: if we detect injuries, severity is higher
-    severity = "medium"
+    severity = "Medium"
     if len(injury_classes) > 1:
-        severity = "critical"
+        severity = "Critical"
     elif len(injury_classes) == 1:
-        severity = "high"
+        severity = "High"
         
     final_result = {
         "animal": animal,

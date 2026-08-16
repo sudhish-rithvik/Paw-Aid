@@ -41,12 +41,14 @@ class ApiService {
     required String imagePath,
     required double lat,
     required double lng,
+    String? address,
     String? notes,
     String? userId,
   }) async {
     final formData = FormData.fromMap({
-      'latitude': lat,
-      'longitude': lng,
+      'lat': lat,
+      'lng': lng,
+      if (address != null && address.isNotEmpty) 'address': address,
       if (notes != null && notes.isNotEmpty) 'notes': notes,
       if (userId != null) 'user_id': userId,
       'image': await MultipartFile.fromFile(
@@ -63,12 +65,14 @@ class ApiService {
     required List<int> imageBytes,
     required double lat,
     required double lng,
+    String? address,
     String? notes,
     String? userId,
   }) async {
     final formData = FormData.fromMap({
-      'latitude': lat,
-      'longitude': lng,
+      'lat': lat,
+      'lng': lng,
+      if (address != null && address.isNotEmpty) 'address': address,
       if (notes != null && notes.isNotEmpty) 'notes': notes,
       if (userId != null) 'user_id': userId,
       'image': MultipartFile.fromBytes(
@@ -83,7 +87,7 @@ class ApiService {
 
   /// Get full case details and status.
   static Future<Map<String, dynamic>> getCaseStatus(String caseId) async {
-    final response = await client.get('/cases/$caseId/status');
+    final response = await client.get('/reports/$caseId/status');
     return response.data as Map<String, dynamic>;
   }
 
@@ -299,6 +303,15 @@ class _AuthInterceptor extends Interceptor {
     final session = Supabase.instance.client.auth.currentSession;
     if (session != null) {
       options.headers['Authorization'] = 'Bearer ${session.accessToken}';
+    } else {
+      // Dev bypass fallback
+      if (options.path.contains('/admin')) {
+        options.headers['Authorization'] = 'Bearer dev-token-admin';
+      } else if (options.path.contains('/citizen') || options.path.contains('/reports')) {
+        options.headers['Authorization'] = 'Bearer dev-token-citizen';
+      } else {
+        options.headers['Authorization'] = 'Bearer dev-token-ngo_staff';
+      }
     }
     handler.next(options);
   }

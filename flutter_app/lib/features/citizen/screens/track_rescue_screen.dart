@@ -4,12 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../../core/services/supabase_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/api_constants.dart';
 import '../providers/report_provider.dart';
+import '../widgets/bounding_box_image.dart';
 
 class TrackRescueScreen extends ConsumerStatefulWidget {
   final String caseId;
@@ -20,20 +22,13 @@ class TrackRescueScreen extends ConsumerStatefulWidget {
 }
 
 class _TrackRescueScreenState extends ConsumerState<TrackRescueScreen> {
-  Timer? _refreshTimer;
-
   @override
   void initState() {
     super.initState();
-    // Refresh case status every 15 seconds
-    _refreshTimer = Timer.periodic(const Duration(seconds: 15), (timer) {
-      ref.read(caseStatusNotifierProvider(widget.caseId).notifier).refresh();
-    });
   }
 
   @override
   void dispose() {
-    _refreshTimer?.cancel();
     super.dispose();
   }
 
@@ -44,6 +39,16 @@ class _TrackRescueScreenState extends ConsumerState<TrackRescueScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Live Rescue Track'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/citizen/home');
+            }
+          },
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -172,15 +177,13 @@ class _TrackRescueScreenState extends ConsumerState<TrackRescueScreen> {
                       if (imagePath != null && imagePath.isNotEmpty) ...[
                         ClipRRect(
                           borderRadius: BorderRadius.circular(12),
-                          child: Image.network(
-                            SupabaseService.getPublicUrl(ApiConstants.animalImagesBucket, imagePath),
+                          child: Container(
                             height: 160,
                             width: double.infinity,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Container(
-                              height: 160,
-                              color: AppColors.surface,
-                              child: const Icon(Icons.broken_image, color: AppColors.textHint),
+                            color: AppColors.surface, // Background for contain fit
+                            child: BoundingBoxImage(
+                              imageUrl: SupabaseService.getPublicUrl(ApiConstants.animalImagesBucket, imagePath),
+                              rawResponse: caseData['raw_response'] as Map<String, dynamic>? ?? {},
                             ),
                           ),
                         ),

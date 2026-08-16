@@ -64,6 +64,19 @@ async def _run_ai_pipeline(
     try:
         # ── 1. AI Analysis ────────────────────────────────────────────────────
         raw = await analyze_animal_image_roboflow(image_bytes)
+        
+        # ── 1.5. AI Fallback ──────────────────────────────────────────────────
+        confidence = float(raw.get("confidence", 0.0))
+        if confidence < 0.4:
+            logger.info("Roboflow confidence low (%s). Falling back to HuggingFace VL...", confidence)
+            from app.services.hf_inference import analyze_animal_image
+            raw_hf = await analyze_animal_image(image_bytes)
+            
+            # Merge results, prioritizing HuggingFace for analysis but keeping Roboflow's bounding box raw_response if needed
+            raw_response = raw.get("_raw_response")
+            raw = raw_hf
+            raw["_raw_response"] = raw_response
+            
         raw_copy = dict(raw)
         raw_response = raw_copy.pop("_raw_response", None)
 
@@ -74,7 +87,7 @@ async def _run_ai_pipeline(
             "visible_injuries": raw_copy.get("visible_injuries", []),
             "mobility": raw_copy.get("mobility", "Unknown"),
             "pain_level": raw_copy.get("pain_level", "Unknown"),
-            "severity": raw_copy.get("severity", "medium"),
+            "severity": raw_copy.get("severity", "Medium"),
             "confidence": float(raw_copy.get("confidence", 0.5)),
             "recommended_action": raw_copy.get("recommended_action", ""),
             "reason": raw_copy.get("reason", ""),
@@ -169,6 +182,7 @@ async def submit_report(
     image: UploadFile = File(..., description="Photo of the injured animal"),
     lat: float = Form(..., description="Latitude of incident"),
     lng: float = Form(..., description="Longitude of incident"),
+    address: Optional[str] = Form(None, description="Human-readable address (if reverse geocoded by client)"),
     notes: Optional[str] = Form(None, description="Any additional notes"),
     authorization: Optional[str] = Header(None),
 ):
@@ -245,7 +259,8 @@ async def submit_report(
         storage_path = None
 
     # ── Reverse geocode ───────────────────────────────────────────────────────
-    address = await reverse_geocode(lat, lng)
+    if not address or address.strip() == "" or address == "Unknown location":
+        address = await reverse_geocode(lat, lng)
 
     # ── Create rescue_case record ─────────────────────────────────────────────
     case_row = {
@@ -308,7 +323,8 @@ async def get_case_status(case_id: str):
             supabase.table("rescue_cases")
             .select(
                 "id, status, priority_level, address, created_at, "
-                "assigned_ngo_id, assigned_volunteer_id, resolved_at"
+                "assigned_ngo_id, assigned_volunteer_id, resolved_at, "
+                "lat, lng, image_path"
             )
             .eq("id", case_id)
             .single()
@@ -324,20 +340,19 @@ async def get_case_status(case_id: str):
     data = resp.data
 
     # Try to fetch AI analysis summary
-    ai_summary = None
     try:
         ai_resp = (
             supabase.table("ai_analyses")
-            .select("animal, severity, recommended_action, confidence")
+            .select("animal, severity, recommended_action, confidence, raw_response, visible_injuries, mobility, pain_level")
             .eq("case_id", case_id)
             .single()
             .execute()
         )
-        ai_summary = ai_resp.data
+        if ai_resp.data:
+            # Flatten AI fields into the root response
+            for k, v in ai_resp.data.items():
+                data[k] = v
     except Exception:
         pass
 
-    return {
-        **data,
-        "ai_summary": ai_summary,
-    }
+    return data

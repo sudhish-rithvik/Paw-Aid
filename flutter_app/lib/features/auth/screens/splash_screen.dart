@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../providers/auth_provider.dart';
@@ -30,7 +31,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     try {
       final session = Supabase.instance.client.auth.currentSession;
       if (session == null) {
-        context.go('/login');
+        final prefs = await SharedPreferences.getInstance();
+        final bypassRole = prefs.getString('bypass_role');
+        if (bypassRole != null) {
+          _navigateByRole(bypassRole);
+        } else {
+          context.go('/login');
+        }
       } else {
         final role = ref.read(userRoleProvider);
         _navigateByRole(role);
