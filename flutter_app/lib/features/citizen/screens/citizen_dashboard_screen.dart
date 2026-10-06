@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/role_switcher.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../providers/report_provider.dart';
 
@@ -21,6 +22,7 @@ class CitizenDashboardScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('PAW-AID Citizen'),
         actions: [
+          const RoleSwitcherButton(),
           IconButton(
             icon: const Icon(Icons.logout),
             tooltip: 'Sign Out',

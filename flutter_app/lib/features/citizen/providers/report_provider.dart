@@ -11,8 +11,6 @@ part 'report_provider.g.dart';
 class MyReports extends _$MyReports {
   @override
   Future<List<dynamic>> build() async {
-    final session = SupabaseService.auth.currentSession;
-    if (session == null) return [];
     return ApiService.getMyReports();
   }
 

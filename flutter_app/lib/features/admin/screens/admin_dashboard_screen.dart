@@ -8,6 +8,7 @@ import 'package:latlong2/latlong.dart';
 
 import '../../../core/constants/api_constants.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/role_switcher.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../providers/admin_provider.dart';
 
@@ -23,6 +24,7 @@ class AdminDashboardScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('PAW-AID Admin Portal'),
         actions: [
+          const RoleSwitcherButton(),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {

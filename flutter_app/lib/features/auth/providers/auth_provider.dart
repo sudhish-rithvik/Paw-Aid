@@ -42,17 +42,21 @@ class AuthNotifier extends _$AuthNotifier {
       if (role == 'admin') email = 'admin@pawaid.com';
       if (role == 'ngo_staff') email = 'ngo@pawaid.com';
       
-      final response = await SupabaseService.auth.signInWithPassword(
-        email: email,
-        password: 'password123',
-      );
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('bypass_role', role);
-      state = AsyncValue.data(response.user);
+
+      try {
+        final response = await SupabaseService.auth.signInWithPassword(
+          email: email,
+          password: 'password123',
+        );
+        state = AsyncValue.data(response.user);
+      } catch (_) {
+        // Fallback for demo mode
+        state = const AsyncValue.data(null);
+      }
+      ref.invalidate(userProfileProvider);
     } catch (e) {
-      // Local demo mode fallback
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('bypass_role', role);
       state = const AsyncValue.data(null);
     }
   }
@@ -98,7 +102,10 @@ class AuthNotifier extends _$AuthNotifier {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('bypass_role');
-      await SupabaseService.auth.signOut();
+      try {
+        await SupabaseService.auth.signOut();
+      } catch (_) {}
+      ref.invalidate(userProfileProvider);
       state = const AsyncValue.data(null);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -122,8 +129,41 @@ class AuthNotifier extends _$AuthNotifier {
 Future<Map<String, dynamic>?> userProfile(Ref ref) async {
   final authState = ref.watch(authNotifierProvider);
   final user = authState.valueOrNull;
-  if (user == null) return null;
-  return SupabaseService.getUserProfile();
+  if (user != null) {
+    try {
+      final p = await SupabaseService.getUserProfile();
+      if (p != null) return p;
+    } catch (_) {}
+  }
+  
+  // Demo mode profile fallback
+  final prefs = await SharedPreferences.getInstance();
+  final role = prefs.getString('bypass_role') ?? 'citizen';
+  if (role == 'admin') {
+    return {
+      'id': '00000000-0000-0000-0000-000000000001',
+      'email': 'admin@pawaid.com',
+      'role': 'admin',
+      'display_name': 'PAW-AID Administrator',
+      'phone': '+919000000001',
+    };
+  } else if (role == 'ngo_staff') {
+    return {
+      'id': '00000000-0000-0000-0000-000000000002',
+      'email': 'ngo@pawaid.com',
+      'role': 'ngo_staff',
+      'display_name': 'Chennai Rescue Dispatcher',
+      'phone': '+914411223344',
+    };
+  } else {
+    return {
+      'id': '00000000-0000-0000-0000-000000000003',
+      'email': 'citizen@pawaid.com',
+      'role': 'citizen',
+      'display_name': 'Priya Ramesh (Animal Lover)',
+      'phone': '+919876543210',
+    };
+  }
 }
 
 @riverpod

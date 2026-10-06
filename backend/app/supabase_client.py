@@ -16,20 +16,19 @@ logger = logging.getLogger(__name__)
 
 @lru_cache()
 def get_supabase() -> Client:
-    """Return a cached Supabase client authenticated with the service role key."""
+    """Return a cached Supabase client authenticated with the service role key, or MockSupabaseClient."""
     settings = get_settings()
 
-    if not settings.supabase_url or not settings.supabase_service_key:
-        logger.warning(
-            "SUPABASE_URL or SUPABASE_SERVICE_KEY is not set. "
-            "Running in demo mode — Supabase calls will fail gracefully."
-        )
-        # Return a client pointed at a dummy URL; callers must handle errors.
-        return create_client(
-            settings.supabase_url or "https://placeholder.supabase.co",
-            settings.supabase_service_key or "placeholder",
-        )
+    if settings.demo_mode or not settings.supabase_url or not settings.supabase_service_key:
+        logger.info("Running in demo mode with resilient local sample database.")
+        from app.mock_db import MockSupabaseClient
+        return MockSupabaseClient()
 
-    client: Client = create_client(settings.supabase_url, settings.supabase_service_key)
-    logger.info("Supabase admin client initialised (service role).")
-    return client
+    try:
+        client: Client = create_client(settings.supabase_url, settings.supabase_service_key)
+        logger.info("Supabase admin client initialised (service role).")
+        return client
+    except Exception as exc:
+        logger.warning("Failed to initialize Supabase client (%s). Falling back to mock DB.", exc)
+        from app.mock_db import MockSupabaseClient
+        return MockSupabaseClient()

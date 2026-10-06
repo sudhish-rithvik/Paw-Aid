@@ -223,53 +223,51 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: Text(
-                          'FAST DEMO BYPASS',
+                          '⚡ 1-TAP DEMO ACCOUNTS',
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: AppColors.textHint,
-                                fontWeight: FontWeight.w600,
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.2,
                               ),
                         ),
                       ),
                       const Expanded(child: Divider()),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 14),
 
-                  ElevatedButton.icon(
-                    onPressed: _isLoading ? null : () => _handleBypassSignIn('citizen'),
-                    icon: const Icon(Icons.person_outline),
-                    label: const Text('LOG IN AS CITIZEN (FAST BYPASS)'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                    ),
+                  _buildQuickLoginCard(
+                    context: context,
+                    role: 'citizen',
+                    title: 'Citizen Account',
+                    name: 'Priya Ramesh (citizen@pawaid.com)',
+                    subtitle: 'Report animal distress, AI injury analysis & track rescue',
+                    icon: Icons.person,
+                    color: AppColors.primary,
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
 
-                  ElevatedButton.icon(
-                    onPressed: _isLoading ? null : () => _handleBypassSignIn('ngo_staff'),
-                    icon: const Icon(Icons.home_work_outlined),
-                    label: const Text('LOG IN AS NGO STAFF (FAST BYPASS)'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.secondary,
-                      foregroundColor: Colors.black,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                    ),
+                  _buildQuickLoginCard(
+                    context: context,
+                    role: 'ngo_staff',
+                    title: 'NGO Dispatcher Account',
+                    name: 'CARF Chennai (ngo@pawaid.com)',
+                    subtitle: 'Manage rescue queue, accept cases & update care stages',
+                    icon: Icons.home_work,
+                    color: AppColors.secondary,
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
 
-                  ElevatedButton.icon(
-                    onPressed: _isLoading ? null : () => _handleBypassSignIn('admin'),
-                    icon: const Icon(Icons.admin_panel_settings_outlined),
-                    label: const Text('LOG IN AS ADMIN (FAST BYPASS)'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.info,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                    ),
+                  _buildQuickLoginCard(
+                    context: context,
+                    role: 'admin',
+                    title: 'Platform Administrator',
+                    name: 'System Admin (admin@pawaid.com)',
+                    subtitle: 'Approve pending NGOs, view heatmaps & city analytics',
+                    icon: Icons.admin_panel_settings,
+                    color: AppColors.info,
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
 
                   // Or divider
                   Row(
@@ -320,6 +318,97 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickLoginCard({
+    required BuildContext context,
+    required String role,
+    required String title,
+    required String name,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+  }) {
+    return InkWell(
+      onTap: _isLoading ? null : () => _handleBypassSignIn(role),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withOpacity(0.35), width: 1.2),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: 20),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          color: color,
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: color.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Text(
+                          'TAP TO ENTER',
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    name,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 10,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 6),
+            Icon(Icons.arrow_forward_ios, size: 14, color: color),
+          ],
         ),
       ),
     );
