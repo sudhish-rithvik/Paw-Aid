@@ -1,1 +1,0 @@
-# PAW-AID schemas package

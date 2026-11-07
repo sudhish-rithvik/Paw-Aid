@@ -239,8 +239,8 @@ class _ActiveRescueScreenState extends ConsumerState<ActiveRescueScreen> {
     final detail = _caseDetail!;
     final lat = (detail['lat'] as num).toDouble();
     final lng = (detail['lng'] as num).toDouble();
-    final address = detail['address'] as String? ?? 'Unknown location';
-    final notes = detail['notes'] as String? ?? '';
+    
+    
     final statusStr = detail['status'] as String? ?? 'accepted';
     final currentStatus = CaseStatus.fromString(statusStr);
     

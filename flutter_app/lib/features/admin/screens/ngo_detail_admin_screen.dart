@@ -1,13 +1,13 @@
 // lib/features/admin/screens/ngo_detail_admin_screen.dart
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../../core/constants/api_constants.dart';
+
 import '../../../core/services/api_service.dart';
-import '../../../core/services/supabase_service.dart';
+
 import '../../../core/theme/app_theme.dart';
 import '../providers/admin_provider.dart';
 
@@ -294,7 +294,7 @@ class _NGODetailAdminScreenState extends ConsumerState<NGODetailAdminScreen> {
                       final docType = doc['doc_type'] as String? ?? 'Document';
                       final storagePath = doc['storage_path'] as String;
 
-                      final docUrl = SupabaseService.getPublicUrl('ngo-documents', storagePath);
+                      final docUrl = storagePath;
 
                       return Container(
                         padding: const EdgeInsets.all(12),

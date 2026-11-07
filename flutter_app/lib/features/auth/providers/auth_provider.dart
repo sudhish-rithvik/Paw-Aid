@@ -1,110 +1,83 @@
 // lib/features/auth/providers/auth_provider.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../../../core/services/auth_service.dart';
 
-import '../../../core/services/supabase_service.dart';
+export '../../../core/services/auth_service.dart' show AuthUser;
 
 part 'auth_provider.g.dart';
 
 @riverpod
 class AuthNotifier extends _$AuthNotifier {
   @override
-  AsyncValue<User?> build() {
-    final sub = SupabaseService.auth.onAuthStateChange.listen((data) {
-      state = AsyncValue.data(data.session?.user);
-    });
-    ref.onDispose(sub.cancel);
-    return AsyncValue.data(SupabaseService.auth.currentUser);
+  AsyncValue<AuthUser?> build() {
+    return const AsyncValue.data(null);
   }
 
-  /// Sign in with email and password.
-  Future<void> signIn(String email, String password) async {
+  /// Sign in with email and password via authentication service.
+  Future<AuthUser> signIn(String email, String password) async {
     state = const AsyncValue.loading();
     try {
-      await SupabaseService.auth.signInWithPassword(
-        email: email.trim(),
-        password: password,
-      );
-      state = AsyncValue.data(SupabaseService.auth.currentUser);
-    } catch (e) {
-      // Local demo mode fallback
-      state = const AsyncValue.data(null);
-    }
-  }
-
-  /// Sign in with predefined dummy accounts for the demo (Bypasses typing email/password).
-  Future<void> signInWithRole(String role) async {
-    state = const AsyncValue.loading();
-    try {
-      String email = 'citizen@pawaid.com';
-      if (role == 'admin') email = 'admin@pawaid.com';
-      if (role == 'ngo_staff') email = 'ngo@pawaid.com';
-      
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('bypass_role', role);
-
-      try {
-        final response = await SupabaseService.auth.signInWithPassword(
-          email: email,
-          password: 'password123',
-        );
-        state = AsyncValue.data(response.user);
-      } catch (_) {
-        // Fallback for demo mode
-        state = const AsyncValue.data(null);
-      }
+      final user = await AuthService.signIn(email: email, password: password);
+      state = AsyncValue.data(user);
       ref.invalidate(userProfileProvider);
-    } catch (e) {
-      state = const AsyncValue.data(null);
-    }
-  }
-
-  /// Register a new citizen account.
-  Future<void> signUp({
-    required String email,
-    required String password,
-    required String displayName,
-    String? phone,
-  }) async {
-    state = const AsyncValue.loading();
-    try {
-      final response = await SupabaseService.auth.signUp(
-        email: email.trim(),
-        password: password,
-        data: {
-          'display_name': displayName.trim(),
-          if (phone != null && phone.isNotEmpty) 'phone': phone.trim(),
-          'role': 'citizen',
-        },
-      );
-      // Insert profile row
-      if (response.user != null) {
-        await SupabaseService.client.from('profiles').upsert({
-          'id': response.user!.id,
-          'display_name': displayName.trim(),
-          if (phone != null && phone.isNotEmpty) 'phone': phone.trim(),
-          'role': 'citizen',
-          'email': email.trim(),
-        });
-      }
-      state = AsyncValue.data(response.user);
+      return user;
     } catch (e, st) {
       state = AsyncValue.error(e, st);
       rethrow;
     }
   }
 
+  /// Sign in with predefined role accounts for instant role-switching.
+  Future<AuthUser> signInWithRole(String role) async {
+    state = const AsyncValue.loading();
+    try {
+      final user = await AuthService.signInWithRole(role);
+      state = AsyncValue.data(user);
+      ref.invalidate(userProfileProvider);
+      return user;
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      rethrow;
+    }
+  }
+
+  /// Register a new citizen account in authentication service.
+  Future<AuthUser> signUp({
+    required String email,
+    required String password,
+    required String displayName,
+    String? phone,
+    String role = 'citizen',
+  }) async {
+    state = const AsyncValue.loading();
+    try {
+      final user = await AuthService.signUp(
+        email: email,
+        password: password,
+        displayName: displayName,
+        phone: phone,
+        role: role,
+      );
+      state = AsyncValue.data(user);
+      ref.invalidate(userProfileProvider);
+      return user;
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      rethrow;
+    }
+  }
+
+  /// Send password reset email
+  Future<void> sendPasswordReset(String email) async {
+    await AuthService.sendPasswordResetEmail(email);
+  }
+
   /// Sign out the current user.
   Future<void> signOut() async {
     state = const AsyncValue.loading();
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove('bypass_role');
-      try {
-        await SupabaseService.auth.signOut();
-      } catch (_) {}
+      await AuthService.signOut();
       ref.invalidate(userProfileProvider);
       state = const AsyncValue.data(null);
     } catch (e, st) {
@@ -115,55 +88,30 @@ class AuthNotifier extends _$AuthNotifier {
 
   /// Update the FCM token for push notifications.
   Future<void> updateFcmToken(String token) async {
-    await SupabaseService.updateFcmToken(token);
+    await AuthService.updateFcmToken(token);
   }
 
-  /// Query the user's role from the profiles table.
+  /// Query the user's role from user profile.
   Future<String> getUserRole() async {
-    final profile = await SupabaseService.getUserProfile();
-    return profile?['role'] as String? ?? 'citizen';
+    final user = await AuthService.getCurrentUser();
+    return user?.role ?? 'citizen';
   }
 }
 
 @riverpod
 Future<Map<String, dynamic>?> userProfile(Ref ref) async {
-  final authState = ref.watch(authNotifierProvider);
-  final user = authState.valueOrNull;
+  final user = await AuthService.getCurrentUser();
   if (user != null) {
-    try {
-      final p = await SupabaseService.getUserProfile();
-      if (p != null) return p;
-    } catch (_) {}
+    return user.toMap();
   }
-  
-  // Demo mode profile fallback
-  final prefs = await SharedPreferences.getInstance();
-  final role = prefs.getString('bypass_role') ?? 'citizen';
-  if (role == 'admin') {
-    return {
-      'id': '00000000-0000-0000-0000-000000000001',
-      'email': 'admin@pawaid.com',
-      'role': 'admin',
-      'display_name': 'PAW-AID Administrator',
-      'phone': '+919000000001',
-    };
-  } else if (role == 'ngo_staff') {
-    return {
-      'id': '00000000-0000-0000-0000-000000000002',
-      'email': 'ngo@pawaid.com',
-      'role': 'ngo_staff',
-      'display_name': 'Chennai Rescue Dispatcher',
-      'phone': '+914411223344',
-    };
-  } else {
-    return {
-      'id': '00000000-0000-0000-0000-000000000003',
-      'email': 'citizen@pawaid.com',
-      'role': 'citizen',
-      'display_name': 'Priya Ramesh (Animal Lover)',
-      'phone': '+919876543210',
-    };
-  }
+  return {
+    'id': '00000000-0000-0000-0000-000000000003',
+    'email': 'citizen@pawaid.com',
+    'role': 'citizen',
+    'display_name': 'Priya Ramesh (Animal Lover)',
+    'phone': '+919876543210',
+    'accountStatus': 'active',
+  };
 }
 
 @riverpod
@@ -176,4 +124,10 @@ bool isAuthenticated(Ref ref) {
 String userRole(Ref ref) {
   final profileAsync = ref.watch(userProfileProvider);
   return profileAsync.valueOrNull?['role'] as String? ?? 'citizen';
+}
+
+@riverpod
+String userAccountStatus(Ref ref) {
+  final profileAsync = ref.watch(userProfileProvider);
+  return profileAsync.valueOrNull?['accountStatus'] as String? ?? 'active';
 }

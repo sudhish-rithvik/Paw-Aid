@@ -38,15 +38,155 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     });
 
     try {
-      await ref.read(authNotifierProvider.notifier).signIn(
+      final user = await ref.read(authNotifierProvider.notifier).signIn(
             _emailController.text,
             _passwordController.text,
           );
-    } catch (_) {}
 
-    if (mounted) {
-      context.go('/citizen/home');
+      if (!mounted) return;
+
+      setState(() => _isLoading = false);
+
+      if (user.isNgo && user.isPending) {
+        _showPendingApprovalDialog();
+        return;
+      }
+
+      if (user.isAdmin) {
+        context.go('/admin/dashboard');
+      } else if (user.isNgo) {
+        context.go('/ngo/dashboard');
+      } else {
+        context.go('/citizen/home');
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        final msg = e.toString()
+            .replaceFirst('Exception: ', '')
+            .replaceFirst('AppException: ', '');
+        _errorMessage = msg;
+      });
+
+      if (e.toString().contains('pending') || e.toString().contains('verification')) {
+        _showPendingApprovalDialog();
+      }
     }
+  }
+
+  void _showPendingApprovalDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.hourglass_top, color: AppColors.warning),
+            SizedBox(width: 8),
+            Text('Verification Pending'),
+          ],
+        ),
+        content: const Text(
+          'Your NGO registration has been received and is currently awaiting verification by a PAW-AID administrator.\n\nOnce your animal welfare credentials are confirmed, you will receive full access to the dispatcher rescue queue.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Understood'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showForgotPasswordDialog() {
+    final resetEmailController = TextEditingController(text: _emailController.text.trim());
+    bool isResetting = false;
+    String? resetError;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            title: const Text('Reset Password'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Enter your registered email address and we will send you a password reset link.',
+                  style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                ),
+                const SizedBox(height: 16),
+                if (resetError != null) ...[
+                  Text(
+                    resetError!,
+                    style: const TextStyle(color: AppColors.critical, fontSize: 12),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+                TextField(
+                  controller: resetEmailController,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: const InputDecoration(
+                    labelText: 'Email Address',
+                    prefixIcon: Icon(Icons.email_outlined),
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: isResetting
+                    ? null
+                    : () async {
+                        final email = resetEmailController.text.trim();
+                        if (email.isEmpty) {
+                          setDialogState(() => resetError = 'Please enter your email address.');
+                          return;
+                        }
+                        setDialogState(() {
+                          isResetting = true;
+                          resetError = null;
+                        });
+                        try {
+                          await ref.read(authNotifierProvider.notifier).sendPasswordReset(email);
+                          if (ctx.mounted) {
+                            Navigator.of(ctx).pop();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Password reset instructions sent to $email'),
+                                backgroundColor: AppColors.success,
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          setDialogState(() {
+                            isResetting = false;
+                            resetError = e.toString()
+                                .replaceFirst('Exception: ', '')
+                                .replaceFirst('AppException: ', '');
+                          });
+                        }
+                      },
+                child: isResetting
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Send Reset Link'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
   }
 
   Future<void> _handleBypassSignIn(String role) async {
@@ -196,7 +336,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 8),
+
+                  // Forgot Password
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: _isLoading ? null : _showForgotPasswordDialog,
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      child: const Text(
+                        'Forgot Password?',
+                        style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
 
                   // Sign In button
                   ElevatedButton(

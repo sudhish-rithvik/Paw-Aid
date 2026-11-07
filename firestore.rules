@@ -1,0 +1,1081 @@
+rules_version = '2';
+
+// ===============================================================
+// PAW-AID: Cloud Firestore Security Rules
+// Emergency Animal Rescue Platform (Part 5 - Firestore Backend Implementation)
+// ===============================================================
+//
+// Assumed Data Model & Schema Invariants:
+//
+// 1. Collection: users/{userId}
+//    - Document ID: Matches Firebase Auth UID (request.auth.uid)
+//    - Fields:
+//        - id / uid: string (1..128 chars, immutable)
+//        - email: string (valid email format, max 100 chars)
+//        - role: string ('citizen', 'CITIZEN', 'ngo', 'ngo_staff', 'NGO', 'NGO_STAFF', 'admin', 'ADMIN')
+//        - accountStatus / account_status: string ('active', 'pending', 'suspended', 'rejected')
+//        - displayName / fullName / display_name: optional string (1..100 chars)
+//        - phone / phoneNumber: optional string (5..30 chars)
+//        - fcmToken / fcm_token: optional string (1..500 chars)
+//        - createdAt / created_at: timestamp or ISO-8601 string (immutable)
+//        - updatedAt / updated_at: timestamp or ISO-8601 string
+//    - RBAC Invariants:
+//        - Untrusted users can only register as citizen ('active') or ngo ('pending').
+//        - Self-promotion to 'admin' or self-activation of NGO accounts is strictly prohibited.
+//        - Regular users cannot modify 'role' or 'accountStatus' on update.
+//        - Admins can manage any profile, assign roles, and approve accounts.
+//
+// 2. Collection: ngos/{ngoId}
+//    - Document ID: NGO unique ID / UID
+//    - Fields:
+//        - id / ngoId: string (1..128 chars)
+//        - name / organizationName: string (1..150 chars)
+//        - registrationNumber / registration_number: string (1..100 chars, immutable by non-admin)
+//        - email: string (valid email, max 100 chars)
+//        - phone: string (5..30 chars)
+//        - city / state / address: optional strings
+//        - latitude / lat, longitude / lng: optional numbers (-90..90, -180..180)
+//        - serviceRadiusKm / service_radius_km: optional number (0..500)
+//        - specializations: optional list (max 20 items)
+//        - status / verification_status / verificationStatus: string ('pending', 'approved', 'verified', 'rejected', 'active')
+//        - numVehicles, numVolunteers, activeCasesCount, totalRescued, successRate: optional numbers
+//        - createdAt / created_at, updatedAt / updated_at: timestamp or ISO-8601 string
+//    - RBAC Invariants:
+//        - Public/citizens can only read verified/approved NGOs.
+//        - Registration creates NGOs with 'pending' status only.
+//        - Only Admins can approve/verify NGOs.
+//        - Approved NGOs can update operational details (capacity, vehicles, contact) but not approval status.
+//        - Admin only can delete.
+//
+// 3. Collection: reports/{reportId} (and aliases rescue_cases/{reportId}, cases/{reportId})
+//    - Document ID: Unique rescue case / report UUID
+//    - Fields:
+//        - reportId / id / case_id: string (1..128 chars, immutable)
+//        - citizenId / reporterId / reporter_id / userId: string (1..128 chars, immutable)
+//        - citizenName / reporterName / reporter_name: optional string (1..100 chars)
+//        - citizenPhone / reporterPhone / reporter_phone: optional string (5..30 chars)
+//        - animalType / animal: string (1..50 chars)
+//        - animalDescription / notes / injuryDescription: optional string (0..5000 chars)
+//        - injuryCategory: optional string (1..100 chars)
+//        - severity / priorityLevel / priority_level: optional string (1..50 chars)
+//        - latitude / lat, longitude / lng: numbers (-90..90, -180..180)
+//        - address: optional string (1..500 chars)
+//        - photoReference / imageUrl / image_path / imageKey: optional string (1..500 chars)
+//        - photoUploadStatus: optional string (1..50 chars)
+//        - photoBase64: optional string (0..200,000 chars - Spark 1 MiB budget protection)
+//        - assignedNgoId / assigned_ngo_id: optional string (1..128 chars)
+//        - assignedNgoName / ngo_name: optional string (1..150 chars)
+//        - reportStatus / status: string
+//        - aiAnalysis / ai_analysis: optional map
+//        - aiAnalysisStatus: optional string (1..50 chars)
+//        - createdAt / created_at: timestamp or ISO-8601 string (immutable)
+//        - updatedAt / updated_at: timestamp or ISO-8601 string
+//    - RBAC Invariants:
+//        - Citizens can read their own reports or open reports. Approved NGOs and Admins can read all.
+//        - Authenticated users can create reports (initial status in ['NEW', 'reported', 'UNDER_REVIEW', 'pending']).
+//        - Update allowed by assigned NGO, Admin, or owner (prior to resolved/closed).
+//        - Delete allowed by Admin only.
+//
+// 4. Subcollection: reports/{reportId}/status_history/{historyId} & top-level status_history/{historyId}
+//    - Document ID: Unique status history entry UUID
+//    - Fields:
+//        - historyId / id: optional string (1..128 chars)
+//        - reportId / report_id: string (1..128 chars)
+//        - previousStatus / previous_status: optional string (1..50 chars)
+//        - newStatus / status: string (1..50 chars)
+//        - actorId / actor_id: optional string (1..128 chars)
+//        - actorRole / actor_role: optional string (1..50 chars)
+//        - notes: optional string (0..2000 chars)
+//        - photoReference / photo_reference: optional string (1..500 chars)
+//        - timestamp / createdAt / created_at: timestamp or ISO-8601 string
+//    - RBAC Invariants:
+//        - Read allowed if user can read the parent report.
+//        - Create is append-only by assigned NGO, reporter, or Admin.
+//        - Update is DENIED (allow update: if false) to guarantee tamper-proof audit trails.
+//        - Delete allowed by Admin only.
+//
+// 5. Collection: assignments/{assignmentId}
+//    - Document ID: Unique assignment UUID
+//    - Fields:
+//        - assignmentId / id: string (1..128 chars)
+//        - reportId / report_id: string (1..128 chars, immutable)
+//        - ngoId / ngo_id: string (1..128 chars, immutable)
+//        - ngoName / ngo_name: string (1..150 chars)
+//        - status: string ('ASSIGNED', 'ACCEPTED', 'REJECTED', 'COMPLETED')
+//        - assignedBy / assigned_by: optional string (1..128 chars)
+//        - etaMinutes / eta_minutes: optional number (0..10080)
+//        - notes: optional string (0..2000 chars)
+//        - rejectionReason / rejection_reason: optional string (0..1000 chars)
+//        - createdAt / created_at: timestamp or ISO-8601 string (immutable)
+//        - updatedAt / updated_at: timestamp or ISO-8601 string
+//    - RBAC Invariants:
+//        - Read allowed if authenticated && (isAdmin() || request.auth.uid == resource.data.ngoId || request.auth.uid == resource.data.assignedBy).
+//        - Create allowed by Admin or system dispatch (or approved NGO self-assigning).
+//        - Update allowed by assigned NGO (to accept/reject or update ETA/notes) or Admin.
+//        - Delete allowed by Admin only.
+//
+// 6. Collection: notifications/{notificationId}
+//    - Fields: recipient_user_id / recipientUserId, title, body, type, reference_id, is_read, createdAt
+//    - RBAC Invariants:
+//        - Read/Update strictly isolated to recipient (request.auth.uid == recipient) or Admin.
+//
+// 7. Collection: volunteers/{volunteerId}
+//    - Fields: userId, name, phone, email, ngoId, status
+//    - RBAC Invariants:
+//        - Read/write by volunteer owner, affiliated NGO, or Admin.
+//
+// 8. Default Deny:
+//    - All unmapped collections/documents strictly denied.
+// ===============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function hasUserDoc() {
+      return isAuthenticated() && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    // Role-based privilege checks (supporting both custom claims & Firestore user docs)
+    function isAdmin() {
+      return isAuthenticated() && (
+        (request.auth.token != null && 'role' in request.auth.token && request.auth.token.role in ['admin', 'ADMIN']) ||
+        (hasUserDoc() && getUserData().role in ['admin', 'ADMIN'] && (
+          ('accountStatus' in getUserData() && getUserData().accountStatus in ['active', 'ACTIVE']) ||
+          ('account_status' in getUserData() && getUserData().account_status in ['active', 'ACTIVE'])
+        ))
+      );
+    }
+
+    function isApprovedNgo() {
+      return isAuthenticated() && (
+        (request.auth.token != null && 'role' in request.auth.token && request.auth.token.role in ['ngo', 'ngo_staff', 'NGO', 'NGO_STAFF']) ||
+        (hasUserDoc() && getUserData().role in ['ngo', 'ngo_staff', 'NGO', 'NGO_STAFF'] && (
+          ('accountStatus' in getUserData() && getUserData().accountStatus in ['active', 'ACTIVE']) ||
+          ('account_status' in getUserData() && getUserData().account_status in ['active', 'ACTIVE'])
+        ))
+      );
+    }
+
+    // Validation primitives
+    function isValidEmail(email) {
+      return email is string &&
+        email.size() <= 100 &&
+        email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isValidOptionalString(field, minLen, maxLen) {
+      return !(field in request.resource.data) ||
+             request.resource.data[field] == null ||
+             (request.resource.data[field] is string &&
+              request.resource.data[field].size() >= minLen &&
+              request.resource.data[field].size() <= maxLen);
+    }
+
+    function isValidOptionalNumber(field, minVal, maxVal) {
+      return !(field in request.resource.data) ||
+             request.resource.data[field] == null ||
+             (request.resource.data[field] is number &&
+              request.resource.data[field] >= minVal &&
+              request.resource.data[field] <= maxVal);
+    }
+
+    function isValidDateTime(field) {
+      return !(field in request.resource.data) ||
+             request.resource.data[field] == null ||
+             request.resource.data[field] is timestamp ||
+             (request.resource.data[field] is string && request.resource.data[field].size() <= 50);
+    }
+
+    function areImmutableFieldsUnchanged(fields) {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(fields);
+    }
+
+    // Ownership & status helper primitives
+    function isCaseReporter(caseData) {
+      return isAuthenticated() && (
+        ('reporterId' in caseData && caseData.reporterId == request.auth.uid) ||
+        ('reporter_id' in caseData && caseData.reporter_id == request.auth.uid) ||
+        ('userId' in caseData && caseData.userId == request.auth.uid) ||
+        ('citizenId' in caseData && caseData.citizenId == request.auth.uid)
+      );
+    }
+
+    function isAssignedNgo(caseData) {
+      return isApprovedNgo() && (
+        ('assignedNgoId' in caseData && caseData.assignedNgoId == request.auth.uid) ||
+        ('assigned_ngo_id' in caseData && caseData.assigned_ngo_id == request.auth.uid)
+      );
+    }
+
+    function isOpenReport(caseData) {
+      let rStat = ('reportStatus' in caseData ? caseData.reportStatus : '');
+      let stat = ('status' in caseData ? caseData.status : '');
+      return rStat in [
+        'NEW', 'new', 'UNDER_REVIEW', 'under_review', 'ASSIGNED', 'assigned',
+        'ACCEPTED', 'accepted', 'RESCUER_ON_THE_WAY', 'rescuer_on_the_way',
+        'ANIMAL_RESCUED', 'animal_rescued', 'TREATMENT_IN_PROGRESS', 'treatment_in_progress',
+        'reported', 'pending', 'open'
+      ] || stat in [
+        'reported', 'open', 'assigned', 'in_progress', 'rescued',
+        'pending', 'accepted', 'dispatched', 'animalPicked', 'vetTreatment',
+        'recovery', 'REPORTED', 'OPEN', 'ASSIGNED', 'IN_PROGRESS', 'RESCUED',
+        'PENDING', 'ACCEPTED', 'DISPATCHED'
+      ];
+    }
+
+    function isResolvedReport(caseData) {
+      let rStat = ('reportStatus' in caseData ? caseData.reportStatus : '');
+      let stat = ('status' in caseData ? caseData.status : '');
+      return rStat in ['RESOLVED', 'resolved', 'REJECTED', 'rejected'] ||
+             stat in ['closed', 'CLOSED', 'completed', 'COMPLETED'];
+    }
+
+    function isInitialReportStatus(data) {
+      let rStat = ('reportStatus' in data ? data.reportStatus : '');
+      let stat = ('status' in data ? data.status : '');
+      return (!('reportStatus' in data) || rStat in ['NEW', 'new', 'UNDER_REVIEW', 'under_review', 'reported', 'REPORTED', 'pending', 'PENDING']) &&
+             (!('status' in data) || stat in ['NEW', 'new', 'UNDER_REVIEW', 'under_review', 'reported', 'REPORTED', 'pending', 'PENDING']);
+    }
+
+    // ===============================================================
+    // Domain Validators (Applied on BOTH create and update)
+    // ===============================================================
+
+    function isValidUser(data) {
+      return data.keys().hasOnly([
+        'id', 'uid', 'email', 'role', 'displayName', 'display_name',
+        'fullName', 'phone', 'phoneNumber', 'accountStatus', 'account_status',
+        'fcmToken', 'fcm_token', 'createdAt', 'created_at', 'updatedAt', 'updated_at'
+      ]) &&
+      data.email is string && isValidEmail(data.email) &&
+      data.role is string && data.role in ['citizen', 'CITIZEN', 'ngo', 'ngo_staff', 'NGO', 'NGO_STAFF', 'admin', 'ADMIN'] &&
+      (
+        ('accountStatus' in data && data.accountStatus in ['active', 'ACTIVE', 'pending', 'PENDING', 'suspended', 'SUSPENDED', 'rejected', 'REJECTED']) ||
+        ('account_status' in data && data.account_status in ['active', 'ACTIVE', 'pending', 'PENDING', 'suspended', 'SUSPENDED', 'rejected', 'REJECTED'])
+      ) &&
+      isValidOptionalString('id', 1, 128) &&
+      isValidOptionalString('uid', 1, 128) &&
+      isValidOptionalString('displayName', 1, 100) &&
+      isValidOptionalString('display_name', 1, 100) &&
+      isValidOptionalString('fullName', 1, 100) &&
+      isValidOptionalString('phone', 5, 30) &&
+      isValidOptionalString('phoneNumber', 5, 30) &&
+      isValidOptionalString('fcmToken', 1, 500) &&
+      isValidOptionalString('fcm_token', 1, 500) &&
+      isValidDateTime('createdAt') &&
+      isValidDateTime('created_at') &&
+      isValidDateTime('updatedAt') &&
+      isValidDateTime('updated_at');
+    }
+
+    function isAllowedUserCreation(data) {
+      let isCitizenReg = data.role in ['citizen', 'CITIZEN'] &&
+        (('accountStatus' in data && data.accountStatus in ['active', 'ACTIVE']) ||
+         ('account_status' in data && data.account_status in ['active', 'ACTIVE']));
+      let isNgoReg = data.role in ['ngo_staff', 'ngo', 'NGO', 'NGO_STAFF'] &&
+        (('accountStatus' in data && data.accountStatus in ['pending', 'PENDING']) ||
+         ('account_status' in data && data.account_status in ['pending', 'PENDING']));
+      return isCitizenReg || isNgoReg;
+    }
+
+    function isValidNgo(data) {
+      return data.keys().hasOnly([
+        'id', 'ngoId', 'name', 'organizationName', 'registrationNumber', 'registration_number',
+        'email', 'phone', 'city', 'state', 'address', 'latitude', 'lat', 'longitude', 'lng',
+        'serviceRadiusKm', 'service_radius_km', 'specializations', 'status', 'verificationStatus',
+        'verification_status', 'rejectionReason', 'rejection_reason', 'numVehicles', 'num_vehicles',
+        'numVolunteers', 'num_volunteers', 'activeCasesCount', 'activeRescuesCount', 'active_cases_count',
+        'totalRescued', 'totalRescuesCount', 'total_rescued', 'successRate', 'success_rate',
+        'documents', 'createdAt', 'created_at', 'updatedAt', 'updated_at', 'userId'
+      ]) &&
+      data.name is string && data.name.size() > 0 && data.name.size() <= 150 &&
+      data.email is string && isValidEmail(data.email) &&
+      data.phone is string && data.phone.size() >= 5 && data.phone.size() <= 30 &&
+      (
+        ('status' in data && data.status in ['pending', 'PENDING', 'approved', 'APPROVED', 'rejected', 'REJECTED', 'active', 'ACTIVE', 'suspended', 'SUSPENDED']) ||
+        ('verification_status' in data && data.verification_status in ['pending', 'PENDING', 'verified', 'VERIFIED', 'rejected', 'REJECTED']) ||
+        ('verificationStatus' in data && data.verificationStatus in ['pending', 'PENDING', 'verified', 'VERIFIED', 'rejected', 'REJECTED'])
+      ) &&
+      isValidOptionalNumber('latitude', -90, 90) &&
+      isValidOptionalNumber('lat', -90, 90) &&
+      isValidOptionalNumber('longitude', -180, 180) &&
+      isValidOptionalNumber('lng', -180, 180) &&
+      isValidOptionalNumber('serviceRadiusKm', 0, 500) &&
+      isValidOptionalNumber('service_radius_km', 0, 500) &&
+      (!('specializations' in data) || (data.specializations is list && data.specializations.size() <= 20)) &&
+      isValidOptionalString('registrationNumber', 1, 100) &&
+      isValidOptionalString('registration_number', 1, 100) &&
+      isValidOptionalString('city', 1, 100) &&
+      isValidOptionalString('state', 1, 100) &&
+      isValidOptionalString('address', 1, 300) &&
+      isValidOptionalString('rejectionReason', 1, 500) &&
+      isValidOptionalString('rejection_reason', 1, 500) &&
+      isValidDateTime('createdAt') &&
+      isValidDateTime('created_at') &&
+      isValidDateTime('updatedAt') &&
+      isValidDateTime('updated_at');
+    }
+
+    function isValidReport(data) {
+      return data.keys().hasOnly([
+        'reportId', 'id', 'case_id',
+        'citizenId', 'reporterId', 'reporter_id', 'userId',
+        'citizenName', 'reporterName', 'reporter_name',
+        'citizenPhone', 'reporterPhone', 'reporter_phone',
+        'animalType', 'animal',
+        'animalDescription', 'injuryDescription', 'notes',
+        'injuryCategory',
+        'severity', 'priorityLevel', 'priority_level',
+        'latitude', 'lat', 'longitude', 'lng',
+        'address',
+        'photoReference', 'imageUrl', 'image_path', 'imageKey', 'photoBase64',
+        'photoUploadStatus',
+        'assignedNgoId', 'assigned_ngo_id',
+        'assignedNgoName', 'ngo_name',
+        'reportStatus', 'status',
+        'aiAnalysis', 'ai_analysis', 'aiAnalysisStatus',
+        'createdAt', 'created_at', 'updatedAt', 'updated_at'
+      ]) &&
+      (
+        ('reporterId' in data && data.reporterId is string && data.reporterId.size() > 0 && data.reporterId.size() <= 128) ||
+        ('reporter_id' in data && data.reporter_id is string && data.reporter_id.size() > 0 && data.reporter_id.size() <= 128) ||
+        ('userId' in data && data.userId is string && data.userId.size() > 0 && data.userId.size() <= 128) ||
+        ('citizenId' in data && data.citizenId is string && data.citizenId.size() > 0 && data.citizenId.size() <= 128)
+      ) &&
+      // Spark budget protection: base64 string must not exceed 200,000 characters
+      (!('photoBase64' in data) || (data.photoBase64 is string && data.photoBase64.size() <= 200000)) &&
+      (!('address' in data) || (data.address is string && data.address.size() <= 500)) &&
+      (!('animalDescription' in data) || (data.animalDescription is string && data.animalDescription.size() <= 5000));
+    }
+
+    function isValidStatusHistory(data) {
+      return data.keys().hasOnly([
+        'historyId', 'id', 'reportId', 'report_id',
+        'previousStatus', 'previous_status',
+        'newStatus', 'status', 'actorId', 'actor_id',
+        'actorRole', 'actor_role', 'notes',
+        'photoReference', 'photo_reference',
+        'timestamp', 'createdAt', 'created_at'
+      ]) &&
+      (
+        ('newStatus' in data && data.newStatus is string && data.newStatus.size() > 0 && data.newStatus.size() <= 50) ||
+        ('status' in data && data.status is string && data.status.size() > 0 && data.status.size() <= 50)
+      ) &&
+      isValidOptionalString('historyId', 1, 128) &&
+      isValidOptionalString('id', 1, 128) &&
+      isValidOptionalString('reportId', 1, 128) &&
+      isValidOptionalString('report_id', 1, 128) &&
+      isValidOptionalString('previousStatus', 1, 50) &&
+      isValidOptionalString('previous_status', 1, 50) &&
+      isValidOptionalString('actorId', 1, 128) &&
+      isValidOptionalString('actor_id', 1, 128) &&
+      isValidOptionalString('actorRole', 1, 50) &&
+      isValidOptionalString('actor_role', 1, 50) &&
+      isValidOptionalString('notes', 0, 2000) &&
+      isValidOptionalString('photoReference', 1, 500) &&
+      isValidOptionalString('photo_reference', 1, 500) &&
+      isValidDateTime('timestamp') &&
+      isValidDateTime('createdAt') &&
+      isValidDateTime('created_at');
+    }
+
+    function isValidAssignment(data) {
+      return data.keys().hasOnly([
+        'assignmentId', 'id', 'reportId', 'report_id',
+        'ngoId', 'ngo_id', 'ngoName', 'ngo_name',
+        'status', 'assignedBy', 'assigned_by',
+        'etaMinutes', 'eta_minutes', 'notes',
+        'rejectionReason', 'rejection_reason',
+        'createdAt', 'created_at', 'updatedAt', 'updated_at'
+      ]) &&
+      (
+        ('reportId' in data && data.reportId is string && data.reportId.size() > 0 && data.reportId.size() <= 128) ||
+        ('report_id' in data && data.report_id is string && data.report_id.size() > 0 && data.report_id.size() <= 128)
+      ) &&
+      (
+        ('ngoId' in data && data.ngoId is string && data.ngoId.size() > 0 && data.ngoId.size() <= 128) ||
+        ('ngo_id' in data && data.ngo_id is string && data.ngo_id.size() > 0 && data.ngo_id.size() <= 128)
+      ) &&
+      (
+        ('ngoName' in data && data.ngoName is string && data.ngoName.size() > 0 && data.ngoName.size() <= 150) ||
+        ('ngo_name' in data && data.ngo_name is string && data.ngo_name.size() > 0 && data.ngo_name.size() <= 150)
+      ) &&
+      data.status is string && data.status in [
+        'ASSIGNED', 'ACCEPTED', 'REJECTED', 'COMPLETED',
+        'assigned', 'accepted', 'rejected', 'completed'
+      ] &&
+      isValidOptionalString('assignmentId', 1, 128) &&
+      isValidOptionalString('id', 1, 128) &&
+      isValidOptionalString('assignedBy', 1, 128) &&
+      isValidOptionalString('assigned_by', 1, 128) &&
+      isValidOptionalNumber('etaMinutes', 0, 10080) &&
+      isValidOptionalNumber('eta_minutes', 0, 10080) &&
+      isValidOptionalString('notes', 0, 2000) &&
+      isValidOptionalString('rejectionReason', 0, 1000) &&
+      isValidOptionalString('rejection_reason', 0, 1000) &&
+      isValidDateTime('createdAt') &&
+      isValidDateTime('created_at') &&
+      isValidDateTime('updatedAt') &&
+      isValidDateTime('updated_at');
+    }
+
+    function isValidNotification(data) {
+      return data.keys().hasOnly([
+        'id', 'notificationId', 'recipient_user_id', 'recipientUserId', 'user_id',
+        'recipient_id', 'title', 'body', 'type', 'reference_id', 'referenceId',
+        'is_read', 'isRead', 'created_at', 'createdAt'
+      ]) &&
+      data.title is string && data.title.size() > 0 && data.title.size() <= 150 &&
+      data.body is string && data.body.size() <= 1000 &&
+      isValidOptionalString('type', 1, 50) &&
+      isValidOptionalString('reference_id', 1, 128) &&
+      isValidOptionalString('referenceId', 1, 128) &&
+      (!('is_read' in data) || data.is_read is bool) &&
+      (!('isRead' in data) || data.isRead is bool) &&
+      isValidDateTime('created_at') &&
+      isValidDateTime('createdAt');
+    }
+
+    function isValidVolunteer(data) {
+      return data.keys().hasOnly([
+        'id', 'volunteerId', 'name', 'fullName', 'email', 'phone', 'phoneNumber',
+        'ngoId', 'selectedNgoId', 'userId', 'status', 'created_at', 'createdAt',
+        'updated_at', 'updatedAt'
+      ]) &&
+      isValidOptionalString('name', 1, 100) &&
+      isValidOptionalString('fullName', 1, 100) &&
+      isValidOptionalString('phone', 5, 30) &&
+      isValidOptionalString('phoneNumber', 5, 30) &&
+      isValidOptionalString('email', 5, 100) &&
+      isValidOptionalString('ngoId', 1, 128) &&
+      isValidOptionalString('selectedNgoId', 1, 128) &&
+      isValidOptionalString('userId', 1, 128) &&
+      isValidOptionalString('status', 1, 50) &&
+      isValidDateTime('created_at') &&
+      isValidDateTime('createdAt');
+    }
+
+    // ===============================================================
+    // Collection Rules
+    // ===============================================================
+
+    // ─── 1. Users ──────────────────────────────────────────────────
+    match /users/{userId} {
+      // Strict PII protection: Users can only read their own profile, Admins can inspect any user
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+
+      // Create: Citizens register as 'active', NGOs as 'pending'. Admin creation is forbidden to untrusted callers.
+      allow create: if isAuthenticated() && isValidUser(request.resource.data) && (
+        (isOwner(userId) && isAllowedUserCreation(request.resource.data)) ||
+        isAdmin()
+      );
+
+      // Update: Admins have full lifecycle access (e.g. approve NGO). Owners cannot modify role or accountStatus.
+      allow update: if isAuthenticated() && isValidUser(request.resource.data) && (
+        isAdmin() || (
+          isOwner(userId) &&
+          request.resource.data.role == resource.data.role &&
+          (!('accountStatus' in resource.data) || ('accountStatus' in request.resource.data && request.resource.data.accountStatus == resource.data.accountStatus)) &&
+          (!('account_status' in resource.data) || ('account_status' in request.resource.data && request.resource.data.account_status == resource.data.account_status)) &&
+          areImmutableFieldsUnchanged(['id', 'uid', 'createdAt', 'created_at'])
+        )
+      );
+
+      // Delete: Admin or user self-deletion
+      allow delete: if isAdmin() || (isOwner(userId) && !isAdmin());
+    }
+
+    // ─── 2. NGOs ───────────────────────────────────────────────────
+    match /ngos/{ngoId} {
+      // Verified/approved NGOs are publicly readable. Pending NGOs visible only to owner & Admin.
+      allow read: if (
+        ('verification_status' in resource.data && resource.data.verification_status in ['verified', 'VERIFIED']) ||
+        ('verificationStatus' in resource.data && resource.data.verificationStatus in ['verified', 'VERIFIED']) ||
+        ('status' in resource.data && resource.data.status in ['active', 'ACTIVE', 'approved', 'APPROVED', 'verified', 'VERIFIED'])
+      ) || (
+        isAuthenticated() && (
+          isAdmin() ||
+          request.auth.uid == ngoId ||
+          ('id' in resource.data && resource.data.id == request.auth.uid) ||
+          ('userId' in resource.data && resource.data.userId == request.auth.uid)
+        )
+      );
+
+      // Registration: Authenticated users can register an NGO, but verification/status MUST be 'pending'
+      allow create: if isAuthenticated() && isValidNgo(request.resource.data) && (
+        isAdmin() || (
+          (!('verification_status' in request.resource.data) || request.resource.data.verification_status in ['pending', 'PENDING']) &&
+          (!('verificationStatus' in request.resource.data) || request.resource.data.verificationStatus in ['pending', 'PENDING']) &&
+          (!('status' in request.resource.data) || request.resource.data.status in ['pending', 'PENDING'])
+        )
+      );
+
+      // Update: Admins can approve/verify NGOs. Approved NGOs can update operational details (capacity, vehicles)
+      // but cannot change approval status or registration numbers.
+      allow update: if isAuthenticated() && isValidNgo(request.resource.data) && (
+        isAdmin() || (
+          isApprovedNgo() &&
+          (
+            request.auth.uid == ngoId ||
+            ('id' in resource.data && resource.data.id == request.auth.uid) ||
+            ('userId' in resource.data && resource.data.userId == request.auth.uid)
+          ) &&
+          areImmutableFieldsUnchanged([
+            'status', 'verification_status', 'verificationStatus',
+            'registration_number', 'registrationNumber', 'id', 'ngoId',
+            'createdAt', 'created_at'
+          ])
+        )
+      );
+
+      // Delete: Administrative action only
+      allow delete: if isAdmin();
+    }
+
+    // ─── 3. Reports (reports) ──────────────────────────────────────
+    match /reports/{reportId} {
+      // Read: Citizens can read their own reports or open reports. Approved NGOs and Admins can read all.
+      allow read: if isAuthenticated() && (
+        isAdmin() ||
+        isApprovedNgo() ||
+        isCaseReporter(resource.data) ||
+        isOpenReport(resource.data)
+      );
+
+      // Create: Authenticated users can create reports (initial status in ['NEW', 'reported', 'UNDER_REVIEW', 'pending']).
+      allow create: if isAuthenticated() && isValidReport(request.resource.data) && (
+        isAdmin() || (
+          isCaseReporter(request.resource.data) &&
+          isInitialReportStatus(request.resource.data)
+        )
+      );
+
+      // Update: Assigned NGO, Admin, or owner (prior to resolved/closed).
+      allow update: if isAuthenticated() && isValidReport(request.resource.data) && (
+        isAdmin() || (
+          (isAssignedNgo(resource.data) || (isApprovedNgo() && isOpenReport(resource.data))) &&
+          areImmutableFieldsUnchanged(['reportId', 'id', 'case_id', 'citizenId', 'reporterId', 'reporter_id', 'userId', 'createdAt', 'created_at'])
+        ) || (
+          isCaseReporter(resource.data) &&
+          !isResolvedReport(resource.data) &&
+          areImmutableFieldsUnchanged([
+            'reportId', 'id', 'case_id', 'citizenId', 'reporterId', 'reporter_id', 'userId',
+            'reportStatus', 'status', 'assignedNgoId', 'assigned_ngo_id', 'assignedNgoName', 'ngo_name',
+            'createdAt', 'created_at'
+          ])
+        )
+      );
+
+      // Delete: Administrative only
+      allow delete: if isAdmin();
+
+      // Subcollection: status_history
+      match /status_history/{historyId} {
+        // Read: Allowed if user can read the parent report.
+        allow read: if isAuthenticated() && (
+          isAdmin() ||
+          isApprovedNgo() ||
+          (
+            exists(/databases/$(database)/documents/reports/$(reportId)) && (
+              isCaseReporter(get(/databases/$(database)/documents/reports/$(reportId)).data) ||
+              isOpenReport(get(/databases/$(database)/documents/reports/$(reportId)).data)
+            )
+          )
+        );
+
+        // Create: Append-only by assigned NGO, reporter, or Admin.
+        allow create: if isAuthenticated() && isValidStatusHistory(request.resource.data) && (
+          isAdmin() ||
+          isApprovedNgo() ||
+          ('actorId' in request.resource.data && request.resource.data.actorId == request.auth.uid) ||
+          (
+            exists(/databases/$(database)/documents/reports/$(reportId)) &&
+            isCaseReporter(get(/databases/$(database)/documents/reports/$(reportId)).data)
+          )
+        );
+
+        // Update: Strictly DENIED to ensure append-only tamper-proof audit trails.
+        allow update: if false;
+
+        // Delete: Admin only
+        allow delete: if isAdmin();
+      }
+
+      // Subcollection: events (Audit trail / responder actions)
+      match /events/{eventId} {
+        allow read: if isAuthenticated() && (
+          isAdmin() ||
+          isApprovedNgo() ||
+          (
+            exists(/databases/$(database)/documents/reports/$(reportId)) && (
+              isCaseReporter(get(/databases/$(database)/documents/reports/$(reportId)).data) ||
+              isOpenReport(get(/databases/$(database)/documents/reports/$(reportId)).data)
+            )
+          )
+        );
+
+        allow create: if isAuthenticated() && (
+          isAdmin() ||
+          isApprovedNgo() ||
+          (
+            exists(/databases/$(database)/documents/reports/$(reportId)) &&
+            isCaseReporter(get(/databases/$(database)/documents/reports/$(reportId)).data)
+          )
+        ) && request.resource.data.keys().hasOnly([
+          'eventType', 'status', 'newStatus', 'actorId', 'actorRole', 'timestamp',
+          'notes', 'photoBase64', 'createdAt', 'created_at'
+        ]) &&
+        isValidOptionalString('notes', 0, 2000) &&
+        isValidOptionalString('photoBase64', 0, 200000);
+
+        allow update: if false;
+        allow delete: if isAdmin();
+      }
+
+      // Subcollection: comments (Threaded responder notes)
+      match /comments/{commentId} {
+        allow read: if isAuthenticated() && (
+          isAdmin() ||
+          isApprovedNgo() ||
+          (
+            exists(/databases/$(database)/documents/reports/$(reportId)) && (
+              isCaseReporter(get(/databases/$(database)/documents/reports/$(reportId)).data) ||
+              isOpenReport(get(/databases/$(database)/documents/reports/$(reportId)).data)
+            )
+          )
+        );
+
+        allow create: if isAuthenticated() && (
+          isAdmin() ||
+          isApprovedNgo() ||
+          (
+            exists(/databases/$(database)/documents/reports/$(reportId)) &&
+            isCaseReporter(get(/databases/$(database)/documents/reports/$(reportId)).data)
+          )
+        ) && (
+          ('authorId' in request.resource.data && request.resource.data.authorId == request.auth.uid) ||
+          ('author_id' in request.resource.data && request.resource.data.author_id == request.auth.uid) ||
+          ('userId' in request.resource.data && request.resource.data.userId == request.auth.uid)
+        ) &&
+        request.resource.data.keys().hasOnly(['id', 'authorId', 'author_id', 'authorName', 'author_name', 'text', 'comment', 'createdAt', 'created_at', 'photoUrl', 'userId']) &&
+        isValidOptionalString('text', 1, 2000) &&
+        isValidOptionalString('comment', 1, 2000);
+
+        allow update, delete: if isAuthenticated() && (
+          isAdmin() ||
+          ('authorId' in resource.data && resource.data.authorId == request.auth.uid) ||
+          ('author_id' in resource.data && resource.data.author_id == request.auth.uid) ||
+          ('userId' in resource.data && resource.data.userId == request.auth.uid)
+        );
+      }
+    }
+
+    // ─── 3b. Legacy Alias Collection: rescue_cases ─────────────────
+    match /rescue_cases/{caseId} {
+      allow read: if isAuthenticated() && (
+        isAdmin() ||
+        isApprovedNgo() ||
+        isCaseReporter(resource.data) ||
+        isOpenReport(resource.data)
+      );
+
+      allow create: if isAuthenticated() && isValidReport(request.resource.data) && (
+        isAdmin() || (
+          isCaseReporter(request.resource.data) &&
+          isInitialReportStatus(request.resource.data)
+        )
+      );
+
+      allow update: if isAuthenticated() && isValidReport(request.resource.data) && (
+        isAdmin() || (
+          (isAssignedNgo(resource.data) || (isApprovedNgo() && isOpenReport(resource.data))) &&
+          areImmutableFieldsUnchanged(['reportId', 'id', 'case_id', 'citizenId', 'reporterId', 'reporter_id', 'userId', 'createdAt', 'created_at'])
+        ) || (
+          isCaseReporter(resource.data) &&
+          !isResolvedReport(resource.data) &&
+          areImmutableFieldsUnchanged([
+            'reportId', 'id', 'case_id', 'citizenId', 'reporterId', 'reporter_id', 'userId',
+            'reportStatus', 'status', 'assignedNgoId', 'assigned_ngo_id', 'assignedNgoName', 'ngo_name',
+            'createdAt', 'created_at'
+          ])
+        )
+      );
+
+      allow delete: if isAdmin();
+
+      match /events/{eventId} {
+        allow read: if isAuthenticated() && (
+          isAdmin() ||
+          isApprovedNgo() ||
+          (
+            exists(/databases/$(database)/documents/rescue_cases/$(caseId)) && (
+              isCaseReporter(get(/databases/$(database)/documents/rescue_cases/$(caseId)).data) ||
+              isOpenReport(get(/databases/$(database)/documents/rescue_cases/$(caseId)).data)
+            )
+          )
+        );
+
+        allow create: if isAuthenticated() && (
+          isAdmin() ||
+          isApprovedNgo() ||
+          (
+            exists(/databases/$(database)/documents/rescue_cases/$(caseId)) &&
+            isCaseReporter(get(/databases/$(database)/documents/rescue_cases/$(caseId)).data)
+          )
+        ) && request.resource.data.keys().hasOnly([
+          'eventType', 'status', 'newStatus', 'actorId', 'actorRole', 'timestamp',
+          'notes', 'photoBase64', 'createdAt', 'created_at'
+        ]) &&
+        isValidOptionalString('notes', 0, 2000) &&
+        isValidOptionalString('photoBase64', 0, 200000);
+
+        allow update: if false;
+        allow delete: if isAdmin();
+      }
+
+      match /status_history/{historyId} {
+        allow read: if isAuthenticated() && (
+          isAdmin() ||
+          isApprovedNgo() ||
+          (
+            exists(/databases/$(database)/documents/rescue_cases/$(caseId)) && (
+              isCaseReporter(get(/databases/$(database)/documents/rescue_cases/$(caseId)).data) ||
+              isOpenReport(get(/databases/$(database)/documents/rescue_cases/$(caseId)).data)
+            )
+          )
+        );
+
+        allow create: if isAuthenticated() && isValidStatusHistory(request.resource.data) && (
+          isAdmin() ||
+          isApprovedNgo() ||
+          ('actorId' in request.resource.data && request.resource.data.actorId == request.auth.uid) ||
+          (
+            exists(/databases/$(database)/documents/rescue_cases/$(caseId)) &&
+            isCaseReporter(get(/databases/$(database)/documents/rescue_cases/$(caseId)).data)
+          )
+        );
+
+        allow update: if false;
+        allow delete: if isAdmin();
+      }
+
+      match /comments/{commentId} {
+        allow read: if isAuthenticated() && (
+          isAdmin() ||
+          isApprovedNgo() ||
+          (
+            exists(/databases/$(database)/documents/rescue_cases/$(caseId)) && (
+              isCaseReporter(get(/databases/$(database)/documents/rescue_cases/$(caseId)).data) ||
+              isOpenReport(get(/databases/$(database)/documents/rescue_cases/$(caseId)).data)
+            )
+          )
+        );
+
+        allow create: if isAuthenticated() && (
+          isAdmin() ||
+          isApprovedNgo() ||
+          (
+            exists(/databases/$(database)/documents/rescue_cases/$(caseId)) &&
+            isCaseReporter(get(/databases/$(database)/documents/rescue_cases/$(caseId)).data)
+          )
+        ) && (
+          ('authorId' in request.resource.data && request.resource.data.authorId == request.auth.uid) ||
+          ('author_id' in request.resource.data && request.resource.data.author_id == request.auth.uid) ||
+          ('userId' in request.resource.data && request.resource.data.userId == request.auth.uid)
+        ) &&
+        request.resource.data.keys().hasOnly(['id', 'authorId', 'author_id', 'authorName', 'author_name', 'text', 'comment', 'createdAt', 'created_at', 'photoUrl', 'userId']) &&
+        isValidOptionalString('text', 1, 2000) &&
+        isValidOptionalString('comment', 1, 2000);
+
+        allow update, delete: if isAuthenticated() && (
+          isAdmin() ||
+          ('authorId' in resource.data && resource.data.authorId == request.auth.uid) ||
+          ('author_id' in resource.data && resource.data.author_id == request.auth.uid) ||
+          ('userId' in resource.data && resource.data.userId == request.auth.uid)
+        );
+      }
+    }
+
+    // ─── 3c. Legacy Alias Collection: cases ────────────────────────
+    match /cases/{caseId} {
+      allow read: if isAuthenticated() && (
+        isAdmin() ||
+        isApprovedNgo() ||
+        isCaseReporter(resource.data) ||
+        isOpenReport(resource.data)
+      );
+
+      allow create: if isAuthenticated() && isValidReport(request.resource.data) && (
+        isAdmin() || (
+          isCaseReporter(request.resource.data) &&
+          isInitialReportStatus(request.resource.data)
+        )
+      );
+
+      allow update: if isAuthenticated() && isValidReport(request.resource.data) && (
+        isAdmin() || (
+          (isAssignedNgo(resource.data) || (isApprovedNgo() && isOpenReport(resource.data))) &&
+          areImmutableFieldsUnchanged(['reportId', 'id', 'case_id', 'citizenId', 'reporterId', 'reporter_id', 'userId', 'createdAt', 'created_at'])
+        ) || (
+          isCaseReporter(resource.data) &&
+          !isResolvedReport(resource.data) &&
+          areImmutableFieldsUnchanged([
+            'reportId', 'id', 'case_id', 'citizenId', 'reporterId', 'reporter_id', 'userId',
+            'reportStatus', 'status', 'assignedNgoId', 'assigned_ngo_id', 'assignedNgoName', 'ngo_name',
+            'createdAt', 'created_at'
+          ])
+        )
+      );
+
+      allow delete: if isAdmin();
+
+      match /events/{eventId} {
+        allow read: if isAuthenticated() && (
+          isAdmin() ||
+          isApprovedNgo() ||
+          (
+            exists(/databases/$(database)/documents/cases/$(caseId)) && (
+              isCaseReporter(get(/databases/$(database)/documents/cases/$(caseId)).data) ||
+              isOpenReport(get(/databases/$(database)/documents/cases/$(caseId)).data)
+            )
+          )
+        );
+
+        allow create: if isAuthenticated() && (
+          isAdmin() ||
+          isApprovedNgo() ||
+          (
+            exists(/databases/$(database)/documents/cases/$(caseId)) &&
+            isCaseReporter(get(/databases/$(database)/documents/cases/$(caseId)).data)
+          )
+        ) && request.resource.data.keys().hasOnly([
+          'eventType', 'status', 'newStatus', 'actorId', 'actorRole', 'timestamp',
+          'notes', 'photoBase64', 'createdAt', 'created_at'
+        ]) &&
+        isValidOptionalString('notes', 0, 2000) &&
+        isValidOptionalString('photoBase64', 0, 200000);
+
+        allow update: if false;
+        allow delete: if isAdmin();
+      }
+
+      match /status_history/{historyId} {
+        allow read: if isAuthenticated() && (
+          isAdmin() ||
+          isApprovedNgo() ||
+          (
+            exists(/databases/$(database)/documents/cases/$(caseId)) && (
+              isCaseReporter(get(/databases/$(database)/documents/cases/$(caseId)).data) ||
+              isOpenReport(get(/databases/$(database)/documents/cases/$(caseId)).data)
+            )
+          )
+        );
+
+        allow create: if isAuthenticated() && isValidStatusHistory(request.resource.data) && (
+          isAdmin() ||
+          isApprovedNgo() ||
+          ('actorId' in request.resource.data && request.resource.data.actorId == request.auth.uid) ||
+          (
+            exists(/databases/$(database)/documents/cases/$(caseId)) &&
+            isCaseReporter(get(/databases/$(database)/documents/cases/$(caseId)).data)
+          )
+        );
+
+        allow update: if false;
+        allow delete: if isAdmin();
+      }
+
+      match /comments/{commentId} {
+        allow read: if isAuthenticated() && (
+          isAdmin() ||
+          isApprovedNgo() ||
+          (
+            exists(/databases/$(database)/documents/cases/$(caseId)) && (
+              isCaseReporter(get(/databases/$(database)/documents/cases/$(caseId)).data) ||
+              isOpenReport(get(/databases/$(database)/documents/cases/$(caseId)).data)
+            )
+          )
+        );
+
+        allow create: if isAuthenticated() && (
+          isAdmin() ||
+          isApprovedNgo() ||
+          (
+            exists(/databases/$(database)/documents/cases/$(caseId)) &&
+            isCaseReporter(get(/databases/$(database)/documents/cases/$(caseId)).data)
+          )
+        ) && (
+          ('authorId' in request.resource.data && request.resource.data.authorId == request.auth.uid) ||
+          ('author_id' in request.resource.data && request.resource.data.author_id == request.auth.uid) ||
+          ('userId' in request.resource.data && request.resource.data.userId == request.auth.uid)
+        ) &&
+        request.resource.data.keys().hasOnly(['id', 'authorId', 'author_id', 'authorName', 'author_name', 'text', 'comment', 'createdAt', 'created_at', 'photoUrl', 'userId']) &&
+        isValidOptionalString('text', 1, 2000) &&
+        isValidOptionalString('comment', 1, 2000);
+
+        allow update, delete: if isAuthenticated() && (
+          isAdmin() ||
+          ('authorId' in resource.data && resource.data.authorId == request.auth.uid) ||
+          ('author_id' in resource.data && resource.data.author_id == request.auth.uid) ||
+          ('userId' in resource.data && resource.data.userId == request.auth.uid)
+        );
+      }
+    }
+
+    // ─── 4. Top-Level Status History (status_history) ──────────────
+    match /status_history/{historyId} {
+      // Read: Allowed if user can read the parent report
+      allow read: if isAuthenticated() && (
+        isAdmin() ||
+        isApprovedNgo() ||
+        (
+          'reportId' in resource.data &&
+          resource.data.reportId is string &&
+          exists(/databases/$(database)/documents/reports/$(resource.data.reportId)) &&
+          (
+            isCaseReporter(get(/databases/$(database)/documents/reports/$(resource.data.reportId)).data) ||
+            isOpenReport(get(/databases/$(database)/documents/reports/$(resource.data.reportId)).data)
+          )
+        )
+      );
+
+      // Create: Append-only by assigned NGO, reporter, or Admin
+      allow create: if isAuthenticated() && isValidStatusHistory(request.resource.data) && (
+        isAdmin() ||
+        isApprovedNgo() ||
+        ('actorId' in request.resource.data && request.resource.data.actorId == request.auth.uid) ||
+        (
+          'reportId' in request.resource.data &&
+          request.resource.data.reportId is string &&
+          exists(/databases/$(database)/documents/reports/$(request.resource.data.reportId)) &&
+          isCaseReporter(get(/databases/$(database)/documents/reports/$(request.resource.data.reportId)).data)
+        )
+      );
+
+      // Update: DENIED to guarantee append-only tamper-proof audit trails
+      allow update: if false;
+
+      // Delete: Admin only
+      allow delete: if isAdmin();
+    }
+
+    // ─── 5. Assignments (assignments) ──────────────────────────────
+    match /assignments/{assignmentId} {
+      // Read: Allowed if authenticated && (isAdmin() || request.auth.uid == resource.data.ngoId || request.auth.uid == resource.data.assignedBy)
+      allow read: if isAuthenticated() && (
+        isAdmin() ||
+        ('ngoId' in resource.data && resource.data.ngoId == request.auth.uid) ||
+        ('assignedBy' in resource.data && resource.data.assignedBy == request.auth.uid)
+      );
+
+      // Create: Admin or system dispatch (or approved NGO self-assigning)
+      allow create: if isAuthenticated() && isValidAssignment(request.resource.data) && (
+        isAdmin() ||
+        (
+          isApprovedNgo() &&
+          (
+            ('ngoId' in request.resource.data && request.auth.uid == request.resource.data.ngoId) ||
+            ('assignedBy' in request.resource.data && request.auth.uid == request.resource.data.assignedBy)
+          )
+        )
+      );
+
+      // Update: Assigned NGO (to accept/reject assignment or update ETA/notes) or Admin
+      allow update: if isAuthenticated() && isValidAssignment(request.resource.data) && (
+        isAdmin() || (
+          resource.data.ngoId == request.auth.uid &&
+          areImmutableFieldsUnchanged(['assignmentId', 'id', 'reportId', 'report_id', 'ngoId', 'ngo_id', 'assignedBy', 'assigned_by', 'createdAt', 'created_at'])
+        )
+      );
+
+      // Delete: Admin only
+      allow delete: if isAdmin();
+    }
+
+    // ─── 6. Notifications (notifications) ──────────────────────────
+    match /notifications/{notificationId} {
+      // Read/Update: Isolated to recipient (request.auth.uid == recipient) or Admin
+      allow read: if isAuthenticated() && (
+        isAdmin() ||
+        ('recipient_user_id' in resource.data && resource.data.recipient_user_id == request.auth.uid) ||
+        ('recipientUserId' in resource.data && resource.data.recipientUserId == request.auth.uid) ||
+        ('recipient_id' in resource.data && resource.data.recipient_id == request.auth.uid) ||
+        ('user_id' in resource.data && resource.data.user_id == request.auth.uid)
+      );
+
+      allow create: if isAuthenticated() && isValidNotification(request.resource.data);
+
+      // Recipients can only mark read/unread status
+      allow update: if isAuthenticated() && isValidNotification(request.resource.data) && (
+        isAdmin() || (
+          (
+            ('recipient_user_id' in resource.data && resource.data.recipient_user_id == request.auth.uid) ||
+            ('recipientUserId' in resource.data && resource.data.recipientUserId == request.auth.uid) ||
+            ('recipient_id' in resource.data && resource.data.recipient_id == request.auth.uid) ||
+            ('user_id' in resource.data && resource.data.user_id == request.auth.uid)
+          ) &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['is_read', 'isRead'])
+        )
+      );
+
+      allow delete: if isAuthenticated() && (
+        isAdmin() ||
+        ('recipient_user_id' in resource.data && resource.data.recipient_user_id == request.auth.uid) ||
+        ('recipientUserId' in resource.data && resource.data.recipientUserId == request.auth.uid) ||
+        ('recipient_id' in resource.data && resource.data.recipient_id == request.auth.uid) ||
+        ('user_id' in resource.data && resource.data.user_id == request.auth.uid)
+      );
+    }
+
+    // ─── 7. Volunteers (volunteers) ────────────────────────────────
+    match /volunteers/{volunteerId} {
+      allow read: if isAuthenticated() && (
+        isAdmin() ||
+        isApprovedNgo() ||
+        isOwner(volunteerId) ||
+        ('userId' in resource.data && resource.data.userId == request.auth.uid)
+      );
+
+      allow create: if isAuthenticated() && isValidVolunteer(request.resource.data) && (
+        isAdmin() ||
+        isOwner(volunteerId) ||
+        ('userId' in request.resource.data && request.resource.data.userId == request.auth.uid)
+      );
+
+      allow update: if isAuthenticated() && isValidVolunteer(request.resource.data) && (
+        isAdmin() || (
+          (isOwner(volunteerId) || ('userId' in resource.data && resource.data.userId == request.auth.uid)) &&
+          areImmutableFieldsUnchanged(['id', 'volunteerId', 'userId', 'createdAt', 'created_at'])
+        )
+      );
+
+      allow delete: if isAuthenticated() && (
+        isAdmin() ||
+        isOwner(volunteerId) ||
+        ('userId' in resource.data && resource.data.userId == request.auth.uid)
+      );
+    }
+
+    // ─── 8. Default Deny ───────────────────────────────────────────
+    // Catch-all default deny for any unmatched document paths
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

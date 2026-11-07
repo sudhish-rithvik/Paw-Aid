@@ -1,9 +1,9 @@
 // lib/features/citizen/providers/report_provider.dart
+import 'dart:async';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/services/api_service.dart';
-import '../../../core/services/supabase_service.dart';
+import '../../../core/services/report_service.dart';
 
 part 'report_provider.g.dart';
 
@@ -22,35 +22,23 @@ class MyReports extends _$MyReports {
 
 @riverpod
 class CaseStatusNotifier extends _$CaseStatusNotifier {
-  RealtimeChannel? _channel;
+  StreamSubscription? _subscription;
 
   @override
   Future<Map<String, dynamic>> build(String caseId) async {
-    // Setup realtime listener
-    _channel = SupabaseService.client.channel('public:rescue_cases:id=eq.$caseId');
-    _channel!.onPostgresChanges(
-      event: PostgresChangeEvent.all,
-      schema: 'public',
-      table: 'rescue_cases',
-      filter: PostgresChangeFilter(
-        type: PostgresChangeFilterType.eq,
-        column: 'id',
-        value: caseId,
-      ),
-      callback: (PostgresChangePayload payload) {
-        refresh();
-      },
-    ).subscribe();
+    // Listen to reactive Cloud Firestore stream updates
+    _subscription = ReportService.watchReport(caseId).listen((data) {
+      state = AsyncValue.data(data);
+    });
 
     ref.onDispose(() {
-      _channel?.unsubscribe();
+      _subscription?.cancel();
     });
 
     return ApiService.getCaseStatus(caseId);
   }
 
   Future<void> refresh() async {
-    state = const AsyncValue.loading();
     state = await AsyncValue.guard(() => ApiService.getCaseStatus(caseId));
   }
 }

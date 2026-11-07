@@ -1,27 +1,91 @@
-# Python / Backend
-backend/venv/
-backend/.env
-backend/uploads/
-backend/__pycache__/
-*.pyc
+# ==============================================================================
+# PAW AID - Global Git Ignore
+# ==============================================================================
 
-# Flutter / Dart
-flutter_app/.dart_tool/
-flutter_app/.flutter-plugins-dependencies
-flutter_app/.pub-cache/
-flutter_app/.pub/
-flutter_app/build/
-flutter_app/android/app/debug/
-flutter_app/android/app/profile/
-flutter_app/android/app/release/
-flutter_app/ios/Flutter/.last_build_id
+# --- Secrets, Credentials & Configuration ---
+# Firebase Client Configuration (local only; use google-services.json.example for repo template)
+**/android/app/google-services.json
+**/ios/Runner/GoogleService-Info.plist
 
-# IDEs and System files
+# Environment variables & secrets
+.env
+.env.*
+*.env
+!*.env.example
+*.key
+*.pem
+*.cert
+
+# Android Keystores & Signing Credentials
+key.properties
+*.keystore
+*.jks
+
+# --- Build Artifacts ---
+# Dart / Flutter build outputs
+build/
+**/build/
+.dart_tool/
+**/.dart_tool/
+.pub-cache/
+**/.pub-cache/
+.pub/
+**/.pub/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+
+# Android build outputs & Gradle caches
+.gradle/
+**/.gradle/
+**/android/.gradle/
+**/android/build/
+**/android/app/build/
+**/android/app/debug/
+**/android/app/profile/
+**/android/app/release/
+**/captures/
+**/local.properties
+**/GeneratedPluginRegistrant.java
+**/.cxx/
+
+# Symbolication & Obfuscation
+*.symbols
+app.*.symbols
+*.map.json
+app.*.map.json
+
+# iOS / macOS build outputs
+**/ios/Flutter/.last_build_id
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Pods/
+**/ios/.symlinks/
+
+# --- IDEs & OS Files ---
 .idea/
+**/.idea/
 *.iml
+**/*.iml
 *.ipr
 *.iws
 .DS_Store
+**/.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# Logs & Diagnostics
 *.log
 *.hprof
-Thumbs.db
+problems-report.html
+**/problems-report.html
+
+# Python bytecode & caches
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Temporary / Scratch files
+tmp/
+temp/

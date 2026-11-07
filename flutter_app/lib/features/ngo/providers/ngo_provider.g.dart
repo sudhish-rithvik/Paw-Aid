@@ -23,6 +23,7 @@ final currentNGOProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef CurrentNGORef = AutoDisposeFutureProviderRef<Map<String, dynamic>?>;
+
 String _$rescueQueueHash() => r'de5a05b5e0df5bb8fb979b5a1314518f6d6e1cad';
 
 /// See also [RescueQueue].
@@ -38,6 +39,7 @@ final rescueQueueProvider =
 );
 
 typedef _$RescueQueue = AutoDisposeAsyncNotifier<List<dynamic>>;
+
 String _$nGOAnalyticsDataHash() => r'ef57d57ba6c7a09bfd0716eb0b07ebc72f176b52';
 
 /// See also [NGOAnalyticsData].
@@ -54,56 +56,15 @@ final nGOAnalyticsDataProvider = AutoDisposeAsyncNotifierProvider<
 );
 
 typedef _$NGOAnalyticsData = AutoDisposeAsyncNotifier<Map<String, dynamic>>;
-String _$nearbyCasesHash() => r'f0616ef109943e95be9b2e603c6cd3d05000ea8d';
-
-/// Copied from Dart SDK
-class _SystemHash {
-  _SystemHash._();
-
-  static int combine(int hash, int value) {
-    // ignore: parameter_assignments
-    hash = 0x1fffffff & (hash + value);
-    // ignore: parameter_assignments
-    hash = 0x1fffffff & (hash + ((0x0007ffff & hash) << 10));
-    return hash ^ (hash >> 6);
-  }
-
-  static int finish(int hash) {
-    // ignore: parameter_assignments
-    hash = 0x1fffffff & (hash + ((0x03ffffff & hash) << 3));
-    // ignore: parameter_assignments
-    hash = hash ^ (hash >> 11);
-    return 0x1fffffff & (hash + ((0x00003fff & hash) << 15));
-  }
-}
-
-abstract class _$NearbyCases
-    extends BuildlessAutoDisposeAsyncNotifier<List<dynamic>> {
-  late final double lat;
-  late final double lng;
-  late final double radius;
-
-  FutureOr<List<dynamic>> build({
-    required double lat,
-    required double lng,
-    double radius = 25.0,
-  });
-}
-
-/// See also [NearbyCases].
-@ProviderFor(NearbyCases)
-const nearbyCasesProvider = NearbyCasesFamily();
 
 /// See also [NearbyCases].
 class NearbyCasesFamily extends Family<AsyncValue<List<dynamic>>> {
-  /// See also [NearbyCases].
   const NearbyCasesFamily();
 
-  /// See also [NearbyCases].
   NearbyCasesProvider call({
     required double lat,
     required double lng,
-    double radius = 25.0,
+    required double radius,
   }) {
     return NearbyCasesProvider(
       lat: lat,
@@ -113,9 +74,7 @@ class NearbyCasesFamily extends Family<AsyncValue<List<dynamic>>> {
   }
 
   @override
-  NearbyCasesProvider getProviderOverride(
-    covariant NearbyCasesProvider provider,
-  ) {
+  NearbyCasesProvider getProviderOverride(covariant NearbyCasesProvider provider) {
     return call(
       lat: provider.lat,
       lng: provider.lng,
@@ -123,63 +82,57 @@ class NearbyCasesFamily extends Family<AsyncValue<List<dynamic>>> {
     );
   }
 
-  static const Iterable<ProviderOrFamily>? _dependencies = null;
+  @override
+  List<ProviderOrFamily>? get allTransitiveDependencies => null;
 
   @override
-  Iterable<ProviderOrFamily>? get dependencies => _dependencies;
-
-  static const Iterable<ProviderOrFamily>? _allTransitiveDependencies = null;
-
-  @override
-  Iterable<ProviderOrFamily>? get allTransitiveDependencies =>
-      _allTransitiveDependencies;
+  List<ProviderOrFamily>? get dependencies => null;
 
   @override
   String? get name => r'nearbyCasesProvider';
 }
 
-/// See also [NearbyCases].
-class NearbyCasesProvider
-    extends AutoDisposeAsyncNotifierProviderImpl<NearbyCases, List<dynamic>> {
-  /// See also [NearbyCases].
+final nearbyCasesProvider = NearbyCasesFamily();
+
+class NearbyCasesProvider extends AutoDisposeAsyncNotifierProviderImpl<
+    NearbyCases, List<dynamic>> {
   NearbyCasesProvider({
-    required double lat,
-    required double lng,
-    double radius = 25.0,
-  }) : this._internal(
+    required this.lat,
+    required this.lng,
+    required this.radius,
+  }) : super.internal(
           () => NearbyCases()
             ..lat = lat
             ..lng = lng
             ..radius = radius,
           from: nearbyCasesProvider,
           name: r'nearbyCasesProvider',
-          debugGetCreateSourceHash:
-              const bool.fromEnvironment('dart.vm.product')
-                  ? null
-                  : _$nearbyCasesHash,
-          dependencies: NearbyCasesFamily._dependencies,
-          allTransitiveDependencies:
-              NearbyCasesFamily._allTransitiveDependencies,
-          lat: lat,
-          lng: lng,
-          radius: radius,
+          debugGetCreateSourceHash: null,
+          dependencies: null,
+          allTransitiveDependencies: null,
         );
-
-  NearbyCasesProvider._internal(
-    super._createNotifier, {
-    required super.name,
-    required super.dependencies,
-    required super.allTransitiveDependencies,
-    required super.debugGetCreateSourceHash,
-    required super.from,
-    required this.lat,
-    required this.lng,
-    required this.radius,
-  }) : super.internal();
 
   final double lat;
   final double lng;
   final double radius;
+
+  @override
+  bool operator ==(Object other) {
+    return other is NearbyCasesProvider &&
+        other.lat == lat &&
+        other.lng == lng &&
+        other.radius == radius;
+  }
+
+  @override
+  int get hashCode {
+    return Object.hash(
+      runtimeType,
+      lat,
+      lng,
+      radius,
+    );
+  }
 
   @override
   FutureOr<List<dynamic>> runNotifierBuild(
@@ -196,72 +149,25 @@ class NearbyCasesProvider
   Override overrideWith(NearbyCases Function() create) {
     return ProviderOverride(
       origin: this,
-      override: NearbyCasesProvider._internal(
-        () => create()
-          ..lat = lat
-          ..lng = lng
-          ..radius = radius,
-        from: from,
-        name: null,
-        dependencies: null,
-        allTransitiveDependencies: null,
-        debugGetCreateSourceHash: null,
+      override: NearbyCasesProvider(
         lat: lat,
         lng: lng,
         radius: radius,
       ),
     );
   }
-
-  @override
-  AutoDisposeAsyncNotifierProviderElement<NearbyCases, List<dynamic>>
-      createElement() {
-    return _NearbyCasesProviderElement(this);
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return other is NearbyCasesProvider &&
-        other.lat == lat &&
-        other.lng == lng &&
-        other.radius == radius;
-  }
-
-  @override
-  int get hashCode {
-    var hash = _SystemHash.combine(0, runtimeType.hashCode);
-    hash = _SystemHash.combine(hash, lat.hashCode);
-    hash = _SystemHash.combine(hash, lng.hashCode);
-    hash = _SystemHash.combine(hash, radius.hashCode);
-
-    return _SystemHash.finish(hash);
-  }
 }
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-mixin NearbyCasesRef on AutoDisposeAsyncNotifierProviderRef<List<dynamic>> {
-  /// The parameter `lat` of this provider.
-  double get lat;
+abstract class _$NearbyCases extends BuildlessAutoDisposeAsyncNotifier<List<dynamic>> {
+  late final double lat;
+  late final double lng;
+  late final double radius;
 
-  /// The parameter `lng` of this provider.
-  double get lng;
-
-  /// The parameter `radius` of this provider.
-  double get radius;
-}
-
-class _NearbyCasesProviderElement
-    extends AutoDisposeAsyncNotifierProviderElement<NearbyCases, List<dynamic>>
-    with NearbyCasesRef {
-  _NearbyCasesProviderElement(super.provider);
-
-  @override
-  double get lat => (origin as NearbyCasesProvider).lat;
-  @override
-  double get lng => (origin as NearbyCasesProvider).lng;
-  @override
-  double get radius => (origin as NearbyCasesProvider).radius;
+  FutureOr<List<dynamic>> build({
+    required double lat,
+    required double lng,
+    required double radius,
+  });
 }
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

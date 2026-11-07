@@ -1,5 +1,5 @@
 // lib/features/citizen/screens/track_rescue_screen.dart
-import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -7,7 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 
-import '../../../core/services/supabase_service.dart';
+
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/api_constants.dart';
 import '../providers/report_provider.dart';
@@ -65,7 +65,7 @@ class _TrackRescueScreenState extends ConsumerState<TrackRescueScreen> {
           final status = CaseStatus.fromString(statusStr);
           final priority = caseData['priority_level'] as String? ?? 'medium';
           final address = caseData['address'] as String? ?? 'Acquiring address...';
-          final notes = caseData['notes'] as String? ?? '';
+          
           final imagePath = caseData['image_path'] as String?;
           final ngoName = caseData['ngo_name'] as String?;
           final ngoPhone = caseData['ngo_phone'] as String?;
@@ -182,7 +182,7 @@ class _TrackRescueScreenState extends ConsumerState<TrackRescueScreen> {
                             width: double.infinity,
                             color: AppColors.surface, // Background for contain fit
                             child: BoundingBoxImage(
-                              imageUrl: SupabaseService.getPublicUrl(ApiConstants.animalImagesBucket, imagePath),
+                              imageUrl: imagePath,
                               rawResponse: caseData['raw_response'] as Map<String, dynamic>? ?? {},
                             ),
                           ),

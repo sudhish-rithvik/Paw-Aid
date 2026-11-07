@@ -10,7 +10,7 @@ import 'package:geocoding/geocoding.dart';
 
 import '../../../core/services/api_service.dart';
 import '../../../core/services/location_service.dart';
-import '../../../core/services/supabase_service.dart';
+import '../../auth/providers/auth_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../providers/report_provider.dart';
 
@@ -27,6 +27,7 @@ class _ReportAnimalScreenState extends ConsumerState<ReportAnimalScreen> {
   XFile? _imageFile;
   LatLng? _currentLocation;
   String? _currentAddress;
+  String _selectedAnimalType = 'Dog';
   bool _isLocating = false;
   bool _isSubmitting = false;
   String? _errorMessage;
@@ -117,14 +118,15 @@ class _ReportAnimalScreenState extends ConsumerState<ReportAnimalScreen> {
     });
 
     try {
-      final session = SupabaseService.auth.currentSession;
-      final userId = session?.user.id;
+      final userProfile = ref.read(userProfileProvider).valueOrNull;
+      final userId = userProfile?['id'];
 
       final result = await ApiService.submitReport(
         imagePath: _imageFile!.path,
         lat: _currentLocation!.latitude,
         lng: _currentLocation!.longitude,
         address: _currentAddress,
+        animalType: _selectedAnimalType,
         notes: _notesController.text.trim(),
         userId: userId,
       );
@@ -188,6 +190,24 @@ class _ReportAnimalScreenState extends ConsumerState<ReportAnimalScreen> {
                   _buildSectionTitle('1. CAPTURE PHOTO', Icons.camera_alt_outlined),
                   const SizedBox(height: 12),
                   _buildPhotoPlaceholder(),
+                  const SizedBox(height: 24),
+
+                  // Animal Type
+                  _buildSectionTitle('2. ANIMAL SPECIES', Icons.pets_outlined),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    children: ['Dog', 'Cat', 'Cow', 'Bird', 'Other'].map((type) {
+                      final isSelected = _selectedAnimalType == type;
+                      return ChoiceChip(
+                        label: Text(type.toUpperCase()),
+                        selected: isSelected,
+                        onSelected: (selected) {
+                          if (selected) setState(() => _selectedAnimalType = type);
+                        },
+                      );
+                    }).toList(),
+                  ),
                   const SizedBox(height: 24),
 
                   // Step 2: Location

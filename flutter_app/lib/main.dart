@@ -3,14 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'core/constants/api_constants.dart';
+import 'core/firebase/firebase_initializer.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'services/notifications/firebase_messaging_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase (Spark tier safe initialization)
+  await FirebaseInitializer.initialize();
 
   // Lock orientation to portrait
   await SystemChrome.setPreferredOrientations([
@@ -25,16 +28,6 @@ void main() async {
     systemNavigationBarColor: AppColors.background,
     systemNavigationBarIconBrightness: Brightness.light,
   ));
-
-  // Initialize Supabase (safely for offline/demo)
-  try {
-    await Supabase.initialize(
-      url: ApiConstants.supabaseUrl,
-      anonKey: ApiConstants.supabaseAnonKey,
-    );
-  } catch (e) {
-    debugPrint('Supabase init bypassed: $e');
-  }
 
   // Initialize flutter_local_notifications
   try {
@@ -59,6 +52,11 @@ void main() async {
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>()
         ?.createNotificationChannel(channel);
+
+    // Initialize Firebase Cloud Messaging & token registration
+    FirebaseMessagingService().initialize().catchError((e) {
+      debugPrint('[FCM] Startup registration deferred: $e');
+    });
   } catch (e) {
     debugPrint('Local notifications bypassed: $e');
   }

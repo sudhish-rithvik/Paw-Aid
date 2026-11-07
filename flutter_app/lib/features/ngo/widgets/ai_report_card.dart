@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
 import 'severity_badge.dart';
 
-/// Structured card that displays the full AI analysis result.
+/// Structured card that displays the on-device AI analysis result.
+/// Distinguishes AI pending, AI completed, and AI unavailable states.
 class AIReportCard extends StatelessWidget {
   final Map<String, dynamic>? analysis;
   final bool isLoading;
@@ -32,54 +33,102 @@ class AIReportCard extends StatelessWidget {
           children: [
             Icon(Icons.hourglass_empty, color: AppColors.textHint, size: 20),
             SizedBox(width: 12),
-            Text('AI analysis in progress...',
+            Text('AI analysis pending on-device evaluation...',
                 style: TextStyle(color: AppColors.textSecondary)),
           ],
         ),
       );
     }
 
-    final animal = analysis!['animal'] as String? ?? 'Unknown';
-    final injuries =
-        List<String>.from(analysis!['visible_injuries'] as List? ?? []);
-    final mobility = analysis!['mobility'] as String? ?? 'Unknown';
-    final painLevel = analysis!['pain_level'] as String? ?? 'Unknown';
-    final severity = analysis!['severity'] as String? ?? 'medium';
+    final status = (analysis!['status'] ?? analysis!['aiAnalysisStatus'] ?? 'COMPLETED')
+        .toString()
+        .toUpperCase();
+
+    if (status == 'PENDING') {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.cardBorder),
+        ),
+        child: const Row(
+          children: [
+            SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.secondary),
+            ),
+            SizedBox(width: 12),
+            Text('On-device LiteRT triage in progress...',
+                style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+          ],
+        ),
+      );
+    }
+
+    if (status == 'UNAVAILABLE') {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.cardBorder),
+        ),
+        child: const Row(
+          children: [
+            Icon(Icons.info_outline, color: AppColors.textHint, size: 20),
+            SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'AI Model Unavailable: Local LiteRT/TFLite model weights (.tflite) not bundled in this build.',
+                style: TextStyle(color: AppColors.textHint, fontSize: 13),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final animal = analysis!['animal'] as String? ?? analysis!['animalDetected'] as String? ?? 'Unknown';
+    final injuriesRaw = analysis!['visible_injuries'] ?? analysis!['visibleInjuries'] ?? analysis!['injuriesDetected'];
+    final injuries = injuriesRaw is List
+        ? List<String>.from(injuriesRaw)
+        : (injuriesRaw is String && injuriesRaw.isNotEmpty ? [injuriesRaw] : <String>[]);
+    final mobility = analysis!['mobility'] as String? ?? analysis!['mobilityAssessment'] as String? ?? 'Unknown';
+    final painLevel = analysis!['pain_level'] as String? ?? analysis!['painLevel'] as String? ?? 'Unknown';
+    final severity = (analysis!['severity'] as String? ?? analysis!['severityScore'] as String? ?? 'medium').toLowerCase();
     final confidence = (analysis!['confidence'] as num?)?.toDouble() ?? 0;
-    final recommendedAction =
-        analysis!['recommended_action'] as String? ?? '';
+    final recommendedAction = analysis!['recommended_action'] as String? ?? analysis!['recommendedAction'] as String? ?? '';
     final reason = analysis!['reason'] as String? ?? '';
 
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.secondary.withOpacity(0.3)),
+        border: Border.all(color: AppColors.secondary.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  AppColors.secondary.withOpacity(0.15),
-                  AppColors.secondary.withOpacity(0.05),
+                  AppColors.secondary.withValues(alpha: 0.15),
+                  AppColors.secondary.withValues(alpha: 0.05),
                 ],
               ),
-              borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(12)),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
             ),
             child: Row(
               children: [
-                const Icon(Icons.psychology,
-                    color: AppColors.secondary, size: 20),
+                const Icon(Icons.psychology, color: AppColors.secondary, size: 20),
                 const SizedBox(width: 10),
                 const Text(
-                  'AI Veterinary Analysis',
+                  'On-Device AI Triage',
                   style: TextStyle(
                     color: AppColors.secondary,
                     fontWeight: FontWeight.w700,
@@ -120,9 +169,10 @@ class AIReportCard extends StatelessWidget {
                             fontSize: 18,
                           ),
                         ),
-                        const Text('confidence',
-                            style: TextStyle(
-                                color: AppColors.textHint, fontSize: 10)),
+                        const Text(
+                          'confidence',
+                          style: TextStyle(color: AppColors.textHint, fontSize: 10),
+                        ),
                       ],
                     ),
                   ],
@@ -134,8 +184,7 @@ class AIReportCard extends StatelessWidget {
 
                 // Injuries
                 if (injuries.isNotEmpty) ...[
-                  _buildRow('Visible Injuries',
-                      injuries.join(' • '), AppColors.critical),
+                  _buildRow('Visible Injuries', injuries.join(' • '), AppColors.critical),
                   const SizedBox(height: 10),
                 ],
 
@@ -143,12 +192,12 @@ class AIReportCard extends StatelessWidget {
                 Row(
                   children: [
                     Expanded(
-                        child: _buildSmallInfo(
-                            'Mobility', mobility, Icons.directions_walk)),
+                      child: _buildSmallInfo('Mobility', mobility, Icons.directions_walk),
+                    ),
                     const SizedBox(width: 12),
                     Expanded(
-                        child: _buildSmallInfo(
-                            'Pain Level', painLevel, Icons.monitor_heart)),
+                      child: _buildSmallInfo('Pain Level', painLevel, Icons.monitor_heart),
+                    ),
                   ],
                 ),
 
@@ -157,13 +206,37 @@ class AIReportCard extends StatelessWidget {
                 const SizedBox(height: 14),
 
                 // Recommended action
-                _buildRow('Recommended Action', recommendedAction,
-                    AppColors.primary),
+                _buildRow('Recommended Action', recommendedAction, AppColors.primary),
 
                 if (reason.isNotEmpty) ...[
                   const SizedBox(height: 10),
                   _buildRow('Reason', reason, AppColors.textSecondary),
                 ],
+              ],
+            ),
+          ),
+
+          // Mandatory Veterinary Disclaimer Banner
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceVariant.withValues(alpha: 0.6),
+              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.warning_amber_rounded, size: 14, color: AppColors.warning),
+                SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    'Preliminary emergency triage only. Not a veterinary medical diagnosis.',
+                    style: TextStyle(
+                      color: AppColors.textHint,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -176,16 +249,17 @@ class AIReportCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label.toUpperCase(),
-            style: const TextStyle(
-                color: AppColors.textHint,
-                fontSize: 9,
-                letterSpacing: 1,
-                fontWeight: FontWeight.w600)),
+        Text(
+          label.toUpperCase(),
+          style: const TextStyle(
+            color: AppColors.textHint,
+            fontSize: 9,
+            letterSpacing: 1,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
         const SizedBox(height: 4),
-        Text(value,
-            style: TextStyle(
-                color: valueColor, fontSize: 13, height: 1.4)),
+        Text(value, style: TextStyle(color: valueColor, fontSize: 13, height: 1.4)),
       ],
     );
   }
@@ -204,19 +278,25 @@ class AIReportCard extends StatelessWidget {
             children: [
               Icon(icon, size: 12, color: AppColors.textHint),
               const SizedBox(width: 4),
-              Text(label.toUpperCase(),
-                  style: const TextStyle(
-                      color: AppColors.textHint,
-                      fontSize: 9,
-                      letterSpacing: 0.5)),
+              Text(
+                label.toUpperCase(),
+                style: const TextStyle(
+                  color: AppColors.textHint,
+                  fontSize: 9,
+                  letterSpacing: 0.5,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 4),
-          Text(value,
-              style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 12)),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+              fontSize: 12,
+            ),
+          ),
         ],
       ),
     );

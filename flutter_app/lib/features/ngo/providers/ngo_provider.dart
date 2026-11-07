@@ -3,20 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../core/services/api_service.dart';
-import '../../../core/services/supabase_service.dart';
+import '../../../core/services/ngo_service.dart';
 
 part 'ngo_provider.g.dart';
 
 @riverpod
 Future<Map<String, dynamic>?> currentNGO(Ref ref) async {
   try {
-    final user = SupabaseService.auth.currentUser;
-    if (user != null) {
-      final profile = await SupabaseService.getNGOProfile();
-      if (profile != null) return profile;
-    }
+    return await NgoService.getNGOProfile('11111111-1111-1111-1111-111111111111');
   } catch (_) {}
-  
+
   return {
     'id': '11111111-1111-1111-1111-111111111111',
     'name': 'Chennai Animal Rescue Foundation (CARF)',
@@ -102,12 +98,22 @@ class NGOAnalyticsData extends _$NGOAnalyticsData {
 @riverpod
 class NearbyCases extends _$NearbyCases {
   @override
-  Future<List<dynamic>> build({required double lat, required double lng, double radius = 25.0}) async {
+  Future<List<dynamic>> build({
+    required double lat,
+    required double lng,
+    required double radius,
+  }) async {
     return ApiService.getNearbyCases(lat: lat, lng: lng, radiusKm: radius);
   }
 
-  Future<void> refresh({required double lat, required double lng, double radius = 25.0}) async {
+  Future<void> refresh({
+    required double lat,
+    required double lng,
+    required double radius,
+  }) async {
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() => ApiService.getNearbyCases(lat: lat, lng: lng, radiusKm: radius));
+    state = await AsyncValue.guard(
+      () => ApiService.getNearbyCases(lat: lat, lng: lng, radiusKm: radius),
+    );
   }
 }

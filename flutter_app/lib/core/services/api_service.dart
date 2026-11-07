@@ -1,249 +1,152 @@
+// lib/core/services/api_service.dart
 import 'package:dio/dio.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' hide MultipartFile;
-
 import '../constants/api_constants.dart';
+import 'report_service.dart';
+import 'ngo_service.dart';
+import 'rescue_service.dart';
+import 'admin_service.dart';
 
-/// Dio-based HTTP client with auth interceptor and error handling.
+/// PAW AID Application API Facade
+/// Central coordinator routing operations across citizen, NGO, and admin services.
 class ApiService {
   ApiService._();
 
-  static Dio? _dio;
+  // ─── Citizen Reports ───────────────────────────────────────────────────────
 
-  static Dio get client {
-    _dio ??= _buildDio();
-    return _dio!;
-  }
-
-  static Dio _buildDio() {
-    final dio = Dio(
-      BaseOptions(
-        baseUrl: ApiConstants.baseUrl,
-        connectTimeout: const Duration(seconds: 30),
-        receiveTimeout: const Duration(seconds: 30),
-        sendTimeout: const Duration(seconds: 60),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-      ),
-    );
-
-    dio.interceptors.add(_AuthInterceptor());
-    dio.interceptors.add(_ErrorInterceptor());
-
-    return dio;
-  }
-
-  // ─── Public reports ────────────────────────────────────────────────────────
-
-  /// Submit a rescue report (multipart). Returns the created case map.
+  /// Submit an animal rescue report
   static Future<Map<String, dynamic>> submitReport({
     required String imagePath,
     required double lat,
     required double lng,
     String? address,
+    String animalType = 'Dog',
     String? notes,
     String? userId,
   }) async {
-    final formData = FormData.fromMap({
-      'lat': lat,
-      'lng': lng,
-      if (address != null && address.isNotEmpty) 'address': address,
-      if (notes != null && notes.isNotEmpty) 'notes': notes,
-      if (userId != null) 'user_id': userId,
-      'image': await MultipartFile.fromFile(
-        imagePath,
-        filename: 'animal_report.jpg',
-      ),
-    });
-    final response = await client.post('/reports', data: formData);
-    return response.data as Map<String, dynamic>;
+    return ReportService.submitAnimalReport(
+      imageSource: imagePath,
+      latitude: lat,
+      longitude: lng,
+      address: address,
+      animalType: animalType,
+      notes: notes,
+      userId: userId,
+    );
   }
 
-  /// Submit a rescue report using raw image bytes.
+  /// Submit a rescue report using raw image bytes
   static Future<Map<String, dynamic>> submitReportBytes({
     required List<int> imageBytes,
     required double lat,
     required double lng,
     String? address,
+    String animalType = 'Dog',
     String? notes,
     String? userId,
   }) async {
-    final formData = FormData.fromMap({
-      'lat': lat,
-      'lng': lng,
-      if (address != null && address.isNotEmpty) 'address': address,
-      if (notes != null && notes.isNotEmpty) 'notes': notes,
-      if (userId != null) 'user_id': userId,
-      'image': MultipartFile.fromBytes(
-        imageBytes,
-        filename: 'animal_report.jpg',
-        contentType: DioMediaType('image', 'jpeg'),
-      ),
-    });
-    final response = await client.post('/reports', data: formData);
-    return response.data as Map<String, dynamic>;
+    return ReportService.submitAnimalReport(
+      imageSource: imageBytes,
+      latitude: lat,
+      longitude: lng,
+      address: address,
+      animalType: animalType,
+      notes: notes,
+      userId: userId,
+    );
   }
 
-  /// Get full case details and status.
+  /// Get authoritative case status and details
   static Future<Map<String, dynamic>> getCaseStatus(String caseId) async {
-    final response = await client.get('/reports/$caseId/status');
-    return response.data as Map<String, dynamic>;
+    return ReportService.getReport(caseId);
   }
 
-  /// Get the full case detail.
+  /// Get the full case detail
   static Future<Map<String, dynamic>> getCaseDetail(String caseId) async {
-    final response = await client.get('/cases/$caseId');
-    return response.data as Map<String, dynamic>;
+    return ReportService.getReport(caseId);
   }
 
-  // ─── NGO operations ────────────────────────────────────────────────────────
+  /// Get citizen's own submitted rescue reports
+  static Future<List<dynamic>> getMyReports() async {
+    return ReportService.getMyReports();
+  }
 
-  /// Get the rescue queue (sorted by AI recommendation score).
+  // ─── NGO Operations ────────────────────────────────────────────────────────
+
+  /// Get the rescue queue (Status: AWAITING_NGO / Pending)
   static Future<List<dynamic>> getRescueQueue({String? ngoId}) async {
-    final params = <String, dynamic>{};
-    if (ngoId != null) params['ngo_id'] = ngoId;
-    final response = await client.get('/ngo/queue', queryParameters: params);
-    final data = response.data;
-    if (data is List) return data;
-    if (data is Map && data['cases'] is List) return data['cases'] as List;
-    return [];
+    return NgoService.getRescueQueue(ngoId: ngoId);
   }
 
-  /// Accept a rescue case as an NGO.
+  /// Accept a rescue case as an NGO
   static Future<void> acceptCase(String caseId) async {
-    await client.post('/ngo/cases/$caseId/accept');
+    await RescueService.acceptRescueReport(caseId);
   }
 
-  /// Update the status of a case (with optional stage photo).
+  /// Update the status of a case (7-stage workflow) with optional evidence photo
   static Future<void> updateCaseStatus(
     String caseId,
     String status, {
     List<int>? imageBytes,
     String? notes,
   }) async {
-    if (imageBytes != null) {
-      final formData = FormData.fromMap({
-        'status': status,
-        if (notes != null) 'notes': notes,
-        'image': MultipartFile.fromBytes(
-          imageBytes,
-          filename: 'stage_update.jpg',
-          contentType: DioMediaType('image', 'jpeg'),
-        ),
-      });
-      await client.patch('/ngo/cases/$caseId/status', data: formData);
-    } else {
-      await client.patch('/ngo/cases/$caseId/status', data: {
-        'status': status,
-        if (notes != null) 'notes': notes,
-      });
-    }
+    await RescueService.updateRescueStatus(
+      caseId,
+      status,
+      imageBytes: imageBytes,
+      notes: notes,
+    );
   }
 
-  /// Get cases near a location within a given radius.
+  /// Get cases near a location within a given radius
   static Future<List<dynamic>> getNearbyCases({
     required double lat,
     required double lng,
     double radiusKm = 25,
   }) async {
-    final response = await client.get('/cases/nearby', queryParameters: {
-      'lat': lat,
-      'lng': lng,
-      'radius_km': radiusKm,
-    });
-    final data = response.data;
-    if (data is List) return data;
-    if (data is Map && data['cases'] is List) return data['cases'] as List;
-    return [];
+    return NgoService.getNearbyCases(lat: lat, lng: lng, radiusKm: radiusKm);
   }
 
-  /// Get NGO-specific analytics.
+  /// Get NGO-specific analytics
   static Future<Map<String, dynamic>> getAnalytics({String? ngoId}) async {
-    final params = <String, dynamic>{};
-    if (ngoId != null) params['ngo_id'] = ngoId;
-    final response = await client.get('/analytics',
-        queryParameters: params.isEmpty ? null : params);
-    return response.data as Map<String, dynamic>;
+    return NgoService.getAnalytics(ngoId: ngoId);
   }
 
-  /// Get heatmap data points for the city-wide map.
-  static Future<List<dynamic>> getHeatmapData() async {
-    final response = await client.get('/analytics/heatmap');
-    final data = response.data;
-    if (data is List) return data;
-    if (data is Map && data['points'] is List) return data['points'] as List;
-    return [];
-  }
-
-  /// Get user's own reports.
-  static Future<List<dynamic>> getMyReports() async {
-    final response = await client.get('/citizen/reports');
-    final data = response.data;
-    if (data is List) return data;
-    if (data is Map && data['cases'] is List) return data['cases'] as List;
-    return [];
-  }
-
-  /// Get NGO profile.
+  /// Get NGO profile
   static Future<Map<String, dynamic>> getNGOProfile(String ngoId) async {
-    final response = await client.get('/ngo/$ngoId/profile');
-    return response.data as Map<String, dynamic>;
+    return NgoService.getNGOProfile(ngoId);
   }
 
-  /// Register a new NGO (multipart with documents).
+  /// Register a new NGO
   static Future<Map<String, dynamic>> registerNGO(
     Map<String, dynamic> data,
     List<Map<String, dynamic>> documents,
   ) async {
-    final formData = FormData.fromMap({...data});
-    for (int i = 0; i < documents.length; i++) {
-      final doc = documents[i];
-      if (doc['bytes'] != null) {
-        formData.files.add(MapEntry(
-          'documents[$i]',
-          MultipartFile.fromBytes(
-            doc['bytes'] as List<int>,
-            filename: doc['filename'] as String? ?? 'document_$i.pdf',
-            contentType: DioMediaType('application', 'pdf'),
-          ),
-        ));
-        formData.fields.add(
-            MapEntry('document_types[$i]', doc['type'] as String? ?? 'other'));
-      }
-    }
-    final response = await client.post('/ngo/register', data: formData);
-    return response.data as Map<String, dynamic>;
+    return NgoService.registerNGO(data, documents);
   }
 
-  // ─── Admin operations ──────────────────────────────────────────────────────
+  // ─── Admin Operations ──────────────────────────────────────────────────────
 
-  /// Get list of NGOs pending approval.
+  /// Get list of NGOs pending verification
   static Future<List<dynamic>> getPendingNGOs() async {
-    final response = await client.get('/admin/ngos/pending');
-    final data = response.data;
-    if (data is List) return data;
-    if (data is Map && data['ngos'] is List) return data['ngos'] as List;
-    return [];
+    return AdminService.getPendingNGOs();
   }
 
-  /// Approve an NGO.
+  /// Approve an NGO
   static Future<void> approveNGO(String ngoId) async {
-    await client.post('/admin/ngos/$ngoId/approve');
+    await AdminService.approveNGO(ngoId);
   }
 
-  /// Reject an NGO with a reason.
+  /// Reject an NGO with audit reason
   static Future<void> rejectNGO(String ngoId, String reason) async {
-    await client.post('/admin/ngos/$ngoId/reject', data: {'reason': reason});
+    await AdminService.rejectNGO(ngoId, reason);
   }
 
-  /// Get platform-wide statistics for admin dashboard.
+  /// Get platform-wide statistics for admin dashboard
   static Future<Map<String, dynamic>> getPlatformStats() async {
-    final response = await client.get('/admin/stats');
-    return response.data as Map<String, dynamic>;
+    return AdminService.getPlatformStats();
   }
 
-  /// Get all cases for admin (paginated).
+  /// Get all cases for admin (paginated)
   static Future<Map<String, dynamic>> getAllCases({
     int page = 1,
     int pageSize = 20,
@@ -251,24 +154,31 @@ class ApiService {
     String? status,
     String? severity,
   }) async {
-    final params = <String, dynamic>{
-      'page': page,
-      'page_size': pageSize,
-      if (search != null && search.isNotEmpty) 'search': search,
-      if (status != null) 'status': status,
-      if (severity != null) 'severity': severity,
-    };
-    final response = await client.get('/admin/cases', queryParameters: params);
-    return response.data as Map<String, dynamic>;
+    return AdminService.getAllReports(
+      page: page,
+      pageSize: pageSize,
+      search: search,
+      status: status,
+      severity: severity,
+    );
   }
 
-  /// Get NGO detail for admin verification.
+  /// Get NGO detail for admin verification
   static Future<Map<String, dynamic>> getNGODetail(String ngoId) async {
-    final response = await client.get('/admin/ngos/$ngoId');
-    return response.data as Map<String, dynamic>;
+    return AdminService.getNGODetail(ngoId);
   }
 
-  // ─── Routing ───────────────────────────────────────────────────────────────
+  /// Get heatmap data points for the city-wide map
+  static Future<List<dynamic>> getHeatmapData() async {
+    final reports = await NgoService.getRescueQueue();
+    return reports.map((r) => {
+          'lat': (r['latitude'] ?? r['lat'] as num?)?.toDouble() ?? 13.0827,
+          'lng': (r['longitude'] ?? r['lng'] as num?)?.toDouble() ?? 80.2707,
+          'weight': r['priority_level'] == 'critical' ? 1.0 : (r['priority_level'] == 'high' ? 0.75 : 0.5),
+        }).toList();
+  }
+
+  // ─── Routing & OpenStreetMap ───────────────────────────────────────────────
 
   /// Get OSRM route between two coordinates. Returns list of [lat, lng] pairs.
   static Future<List<List<double>>> getRoute({
@@ -288,88 +198,8 @@ class ApiService {
       return coords
           .map((c) => [(c[1] as num).toDouble(), (c[0] as num).toDouble()])
           .toList();
-    } catch (e) {
+    } catch (_) {
       return [];
     }
-  }
-}
-
-// ─── Interceptors ─────────────────────────────────────────────────────────────
-
-class _AuthInterceptor extends Interceptor {
-  @override
-  void onRequest(
-      RequestOptions options, RequestInterceptorHandler handler) async {
-    final session = Supabase.instance.client.auth.currentSession;
-    if (session != null) {
-      options.headers['Authorization'] = 'Bearer ${session.accessToken}';
-    } else {
-      // Dev bypass fallback
-      if (options.path.contains('/admin')) {
-        options.headers['Authorization'] = 'Bearer dev-token-admin';
-      } else if (options.path.contains('/citizen') || options.path.contains('/reports')) {
-        options.headers['Authorization'] = 'Bearer dev-token-citizen';
-      } else {
-        options.headers['Authorization'] = 'Bearer dev-token-ngo_staff';
-      }
-    }
-    handler.next(options);
-  }
-}
-
-class _ErrorInterceptor extends Interceptor {
-  @override
-  void onError(DioException err, ErrorInterceptorHandler handler) {
-    String message = _humanReadableError(err);
-    handler.next(
-      DioException(
-        requestOptions: err.requestOptions,
-        response: err.response,
-        type: err.type,
-        error: message,
-        message: message,
-      ),
-    );
-  }
-
-  String _humanReadableError(DioException err) {
-    if (err.type == DioExceptionType.connectionTimeout ||
-        err.type == DioExceptionType.receiveTimeout ||
-        err.type == DioExceptionType.sendTimeout) {
-      return 'Connection timed out. Please check your network and try again.';
-    }
-    if (err.type == DioExceptionType.connectionError) {
-      return 'Cannot reach the server. Please check your internet connection.';
-    }
-    final statusCode = err.response?.statusCode;
-    if (statusCode != null) {
-      final responseData = err.response?.data;
-      String? serverMsg;
-      if (responseData is Map) {
-        serverMsg = responseData['detail']?.toString() ??
-            responseData['message']?.toString() ??
-            responseData['error']?.toString();
-      }
-      if (serverMsg != null && serverMsg.isNotEmpty) return serverMsg;
-      switch (statusCode) {
-        case 400:
-          return 'Bad request. Please check your input.';
-        case 401:
-          return 'Authentication required. Please sign in.';
-        case 403:
-          return 'You do not have permission for this action.';
-        case 404:
-          return 'Resource not found.';
-        case 422:
-          return 'Invalid data. Please check your input.';
-        case 429:
-          return 'Too many requests. Please wait a moment.';
-        case 500:
-          return 'Server error. Please try again later.';
-        default:
-          return 'Request failed (HTTP $statusCode).';
-      }
-    }
-    return 'An unexpected error occurred. Please try again.';
   }
 }

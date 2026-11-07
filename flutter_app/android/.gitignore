@@ -6,9 +6,13 @@ gradle-wrapper.jar
 /local.properties
 GeneratedPluginRegistrant.java
 .cxx/
+build/
+app/build/
 
-# Remember to never publicly share your keystore.
-# See https://flutter.dev/to/reference-keystore
+# Keystores & Signing
 key.properties
 **/*.keystore
 **/*.jks
+
+# Firebase credentials (keep local; template in google-services.json.example)
+app/google-services.json

@@ -5,21 +5,11 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/services/supabase_service.dart';
+import '../../../core/services/admin_service.dart';
 import '../../../core/theme/app_theme.dart';
 
-/// Live counter provider — reads total rescue cases from Supabase.
-final _rescueCountProvider = FutureProvider<int>((ref) async {
-  try {
-    final resp = await SupabaseService.client
-        .from('rescue_cases')
-        .select('id')
-        .neq('status', 'closed');
-    return (resp as List).length;
-  } catch (_) {
-    return 1247; // fallback demo value
-  }
-});
+/// Live counter provider — reads total rescue cases from platform service.
+final _rescueCountProvider = FutureProvider<int>((ref) async { try { final stats = await AdminService.getPlatformStats(); return stats['total_rescued'] as int? ?? 119; } catch (_) { return 119; } });
 
 class CitizenHomeScreen extends ConsumerStatefulWidget {
   const CitizenHomeScreen({super.key});
@@ -407,3 +397,4 @@ class _CitizenHomeScreenState extends ConsumerState<CitizenHomeScreen>
     );
   }
 }
+

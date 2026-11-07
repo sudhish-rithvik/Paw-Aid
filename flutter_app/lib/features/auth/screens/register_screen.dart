@@ -53,11 +53,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             phone: _phoneController.text.isNotEmpty ? _phoneController.text : null,
           );
       
-      // On success, go_router redirect takes over and routes to /citizen/home
+      if (mounted) {
+        setState(() => _isLoading = false);
+        context.go('/citizen/home');
+      }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = e.toString().replaceFirst('Exception: ', '');
+          _errorMessage = e.toString()
+              .replaceFirst('Exception: ', '')
+              .replaceFirst('AppException: ', '');
           _isLoading = false;
         });
       }

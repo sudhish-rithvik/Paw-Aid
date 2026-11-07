@@ -1,17 +1,7 @@
 // lib/core/constants/api_constants.dart
 
 class ApiConstants {
-  // Using 127.0.0.1 with `adb reverse tcp:8000 tcp:8000` for 100% reliable USB connection
-  static const String baseUrl = 'http://127.0.0.1:8000/api';
-  static const String supabaseUrl = 'https://jqrdaepaetwulsqfletb.supabase.co';
-  static const String supabaseAnonKey = 'sb_publishable_LUiFehvw5I2cVCcZhSIRaw_AncNcQ9i';
-
-  // Supabase storage bucket names
-  static const String animalImagesBucket = 'animal-images';
-  static const String ngoDocumentsBucket = 'ngo-documents';
-  static const String rescueStagesBucket = 'rescue-stages';
-
-  // Map tiles
+  // Map tiles (OpenStreetMap — 100% Free)
   static const String osmTileUrl = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
   static const String osmAttribution = '© OpenStreetMap contributors';
 

@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 
 class BoundingBoxImage extends StatelessWidget {
@@ -10,6 +12,67 @@ class BoundingBoxImage extends StatelessWidget {
     required this.rawResponse,
   });
 
+  Widget _buildImage(String src, BoxFit fit) {
+    if (src.isEmpty) {
+      return Container(
+        color: Colors.grey[200],
+        child: const Center(child: Icon(Icons.pets, color: Colors.grey, size: 40)),
+      );
+    }
+    if (src.startsWith('data:image') || src.length > 500) {
+      try {
+        final base64String = src.contains(',') ? src.split(',').last : src;
+        final bytes = base64Decode(
+            base64String.replaceAll('\n', '').replaceAll('\r', '').trim());
+        return Image.memory(
+          bytes,
+          fit: fit,
+          errorBuilder: (_, __, ___) => Container(
+            color: Colors.grey[200],
+            child: const Center(
+                child: Icon(Icons.broken_image, color: Colors.grey, size: 40)),
+          ),
+        );
+      } catch (_) {
+        return Container(
+          color: Colors.grey[200],
+          child: const Center(
+              child: Icon(Icons.broken_image, color: Colors.grey, size: 40)),
+        );
+      }
+    } else if (src.startsWith('http://') || src.startsWith('https://')) {
+      return Image.network(
+        src,
+        fit: fit,
+        errorBuilder: (_, __, ___) => Container(
+          color: Colors.grey[200],
+          child: const Center(
+              child: Icon(Icons.broken_image, color: Colors.grey, size: 40)),
+        ),
+      );
+    } else if (File(src).existsSync()) {
+      return Image.file(
+        File(src),
+        fit: fit,
+        errorBuilder: (_, __, ___) => Container(
+          color: Colors.grey[200],
+          child: const Center(
+              child: Icon(Icons.broken_image, color: Colors.grey, size: 40)),
+        ),
+      );
+    } else {
+      return Image.asset(
+        src,
+        fit: fit,
+        errorBuilder: (_, __, ___) => Container(
+          color: Colors.grey[200],
+          child: const Center(child: Icon(Icons.pets, color: Colors.grey, size: 40)),
+        ),
+      );
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     final imageMetadata = rawResponse['image'] as Map<String, dynamic>?;
@@ -21,10 +84,9 @@ class BoundingBoxImage extends StatelessWidget {
 
     // If we don't have dimensions or predictions, just show the image normally
     if (imageWidth == null || imageHeight == null || predictions.isEmpty) {
-      return Image.network(
+      return _buildImage(
         imageUrl,
-        width: double.infinity,
-        fit: BoxFit.cover, // fallback to cover if no bounding boxes
+        BoxFit.cover,
       );
     }
 
@@ -64,9 +126,9 @@ class BoundingBoxImage extends StatelessWidget {
             SizedBox(
               width: boxWidth,
               height: boxHeight,
-              child: Image.network(
+              child: _buildImage(
                 imageUrl,
-                fit: BoxFit.contain,
+                BoxFit.contain,
               ),
             ),
             Positioned(

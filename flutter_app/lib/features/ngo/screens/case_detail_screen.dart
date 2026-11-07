@@ -7,7 +7,7 @@ import 'package:latlong2/latlong.dart';
 
 import '../../../core/constants/api_constants.dart';
 import '../../../core/services/api_service.dart';
-import '../../../core/services/supabase_service.dart';
+
 import '../../../core/theme/app_theme.dart';
 import '../../citizen/widgets/bounding_box_image.dart';
 import '../providers/ngo_provider.dart';
@@ -159,7 +159,7 @@ class _CaseDetailScreenState extends ConsumerState<CaseDetailScreen> {
                 width: double.infinity,
                 color: AppColors.surface,
                 child: BoundingBoxImage(
-                  imageUrl: SupabaseService.getPublicUrl(ApiConstants.animalImagesBucket, imagePath),
+                  imageUrl: imagePath,
                   rawResponse: (aiAnalysis?['raw_response'] as Map?)?.cast<String, dynamic>() ?? {},
                 ),
               )
