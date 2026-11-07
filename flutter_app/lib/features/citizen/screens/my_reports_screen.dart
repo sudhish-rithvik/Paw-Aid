@@ -35,7 +35,7 @@ class MyReportsScreen extends ConsumerWidget {
                         const SizedBox(height: 16),
                         const Text(
                           'No reports found',
-                          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                          style: TextStyle(color: AppColors.textPrimaryLight, fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 8),
                         const Text(

@@ -255,7 +255,7 @@ class _ReportAnimalScreenState extends ConsumerState<ReportAnimalScreen> {
             fontSize: 14,
             fontWeight: FontWeight.bold,
             letterSpacing: 1.0,
-            color: Colors.white,
+            color: AppColors.textPrimaryLight,
           ),
         ),
       ],
@@ -272,7 +272,7 @@ class _ReportAnimalScreenState extends ConsumerState<ReportAnimalScreen> {
             width: double.infinity,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.border),
+              border: Border.all(color: AppColors.borderLight, width: 1.2),
               image: DecorationImage(
                 image: FileImage(File(_imageFile!.path)),
                 fit: BoxFit.cover,
@@ -299,12 +299,12 @@ class _ReportAnimalScreenState extends ConsumerState<ReportAnimalScreen> {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.borderLight, width: 1.2),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.pets, size: 48, color: AppColors.textHint),
+          const Icon(Icons.pets, size: 48, color: AppColors.textHintLight),
           const SizedBox(height: 16),
           const Text('Take or select a photo of the animal', style: TextStyle(color: AppColors.textSecondary)),
           const SizedBox(height: 16),
@@ -343,7 +343,7 @@ class _ReportAnimalScreenState extends ConsumerState<ReportAnimalScreen> {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.borderLight, width: 1.2),
       ),
       child: Row(
         children: [

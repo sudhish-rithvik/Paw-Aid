@@ -88,12 +88,12 @@ class AdminDashboardScreen extends ConsumerWidget {
                             children: [
                               Text(
                                 '${ngos.length} Pending NGO Registrations',
-                                style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 14),
+                                style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimaryLight, fontSize: 14),
                               ),
                               const SizedBox(height: 2),
                               const Text(
                                 'Awaiting credential review and approval.',
-                                style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                                style: TextStyle(color: AppColors.textSecondaryLight, fontSize: 12),
                               ),
                             ],
                           ),
@@ -231,7 +231,7 @@ class AdminDashboardScreen extends ConsumerWidget {
                     title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
+                    style: const TextStyle(color: AppColors.textSecondaryLight, fontSize: 11),
                   ),
                 ),
               ],

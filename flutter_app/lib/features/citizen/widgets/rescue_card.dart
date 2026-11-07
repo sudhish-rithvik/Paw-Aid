@@ -34,9 +34,16 @@ class RescueCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.cardBorder),
+          color: AppColors.surfaceLight,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.cardBorderLight, width: 1.2),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.mocha.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -70,7 +77,7 @@ class RescueCard extends StatelessWidget {
                   style: const TextStyle(
                       fontWeight: FontWeight.w700,
                       fontSize: 14,
-                      color: Colors.white),
+                      color: AppColors.textPrimaryLight),
                 ),
                 const Spacer(),
                 // Status chip
@@ -97,7 +104,7 @@ class RescueCard extends StatelessWidget {
             Row(
               children: [
                 const Icon(Icons.location_on_outlined,
-                    size: 14, color: AppColors.textHint),
+                    size: 14, color: AppColors.textHintLight),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
@@ -105,7 +112,7 @@ class RescueCard extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                        color: AppColors.textSecondary, fontSize: 12),
+                        color: AppColors.textSecondaryLight, fontSize: 12),
                   ),
                 ),
               ],
@@ -121,7 +128,7 @@ class RescueCard extends StatelessWidget {
                       ? timeago.format(createdAt)
                       : '',
                   style: const TextStyle(
-                      color: AppColors.textHint, fontSize: 11),
+                      color: AppColors.textHintLight, fontSize: 11),
                 ),
                 const Row(
                   children: [

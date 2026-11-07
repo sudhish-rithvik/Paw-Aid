@@ -51,7 +51,7 @@ class RoleSwitcherButton extends ConsumerWidget {
   void _showAccountSwitcher(BuildContext context, WidgetRef ref, String currentRole) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.surface,
+      backgroundColor: AppColors.surfaceLight,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -68,7 +68,7 @@ class RoleSwitcherButton extends ConsumerWidget {
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: AppColors.textHint.withOpacity(0.5),
+                      color: AppColors.textHintLight.withOpacity(0.5),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -83,7 +83,7 @@ class RoleSwitcherButton extends ConsumerWidget {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: AppColors.textPrimaryLight,
                       ),
                     ),
                   ],
@@ -91,7 +91,7 @@ class RoleSwitcherButton extends ConsumerWidget {
                 const SizedBox(height: 6),
                 const Text(
                   'Instantly switch between roles to test the full rescue lifecycle.',
-                  style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                  style: TextStyle(fontSize: 12, color: AppColors.textSecondaryLight),
                 ),
                 const SizedBox(height: 16),
 
@@ -191,10 +191,10 @@ class RoleSwitcherButton extends ConsumerWidget {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: isSelected ? color.withOpacity(0.12) : AppColors.surfaceVariant,
+          color: isSelected ? color.withOpacity(0.12) : AppColors.surfaceVariantLight,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? color : AppColors.divider,
+            color: isSelected ? color : AppColors.borderLight,
             width: isSelected ? 1.5 : 1,
           ),
         ),
@@ -239,17 +239,17 @@ class RoleSwitcherButton extends ConsumerWidget {
                   const SizedBox(height: 2),
                   Text(
                     email,
-                    style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                    style: const TextStyle(fontSize: 12, color: AppColors.textSecondaryLight),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     description,
-                    style: const TextStyle(fontSize: 10, color: AppColors.textHint),
+                    style: const TextStyle(fontSize: 10, color: AppColors.textHintLight),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.textHint),
+            const Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.textHintLight),
           ],
         ),
       ),

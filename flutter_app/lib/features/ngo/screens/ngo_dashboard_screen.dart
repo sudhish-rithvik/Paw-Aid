@@ -118,7 +118,7 @@ class _NGODashboardScreenState extends ConsumerState<NGODashboardScreen> {
                     'Welcome,\n${ngo['name']}',
                     style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                           fontWeight: FontWeight.w800,
-                          color: Colors.white,
+                          color: AppColors.textPrimaryLight,
                         ),
                   );
                 },
@@ -310,7 +310,7 @@ class _NGODashboardScreenState extends ConsumerState<NGODashboardScreen> {
                   const SizedBox(height: 4),
                   Text(
                     value,
-                    style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                    style: const TextStyle(color: AppColors.textPrimaryLight, fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),

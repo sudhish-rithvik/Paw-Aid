@@ -234,8 +234,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           width: 80,
                           height: 80,
                           decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.1),
+                            color: AppColors.primary.withOpacity(0.12),
                             shape: BoxShape.circle,
+                            border: Border.all(color: AppColors.primary.withOpacity(0.25), width: 2),
                           ),
                           child: const Icon(
                             Icons.pets,
@@ -247,15 +248,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         Text(
                           'PAW-AID',
                           style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                                color: Colors.white,
+                                color: AppColors.primary,
                                 fontWeight: FontWeight.w900,
+                                letterSpacing: 1.5,
                               ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           'Emergency Animal Rescue Network',
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: AppColors.textSecondary,
+                                color: AppColors.textSecondaryLight,
+                                fontWeight: FontWeight.w600,
                               ),
                         ),
                       ],
@@ -547,17 +550,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   Text(
                     name,
                     style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimaryLight,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
                     style: const TextStyle(
-                      fontSize: 10,
-                      color: AppColors.textSecondary,
+                      fontSize: 11,
+                      color: AppColors.textSecondaryLight,
                     ),
                   ),
                 ],

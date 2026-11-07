@@ -45,12 +45,19 @@ class RescueListTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(12),
+          color: AppColors.surfaceLight,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.mocha.withOpacity(0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
           border: Border.all(
             color: isAssigned
                 ? AppColors.secondary.withOpacity(0.3)
-                : AppColors.cardBorder,
+                : AppColors.cardBorderLight,
             width: isAssigned ? 1.5 : 1,
           ),
         ),
@@ -67,7 +74,7 @@ class RescueListTile extends StatelessWidget {
                   style: const TextStyle(
                       fontWeight: FontWeight.w700,
                       fontSize: 15,
-                      color: Colors.white),
+                      color: AppColors.textPrimaryLight),
                 ),
                 const Spacer(),
                 if (score != null)
@@ -94,7 +101,7 @@ class RescueListTile extends StatelessWidget {
             Row(
               children: [
                 const Icon(Icons.location_on_outlined,
-                    size: 13, color: AppColors.textHint),
+                    size: 13, color: AppColors.textHintLight),
                 const SizedBox(width: 4),
                 Expanded(
                   child: Text(
@@ -102,7 +109,7 @@ class RescueListTile extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                        color: AppColors.textSecondary, fontSize: 12),
+                        color: AppColors.textSecondaryLight, fontSize: 12),
                   ),
                 ),
               ],
@@ -119,7 +126,7 @@ class RescueListTile extends StatelessWidget {
                   Text(
                     timeago.format(createdAt),
                     style: const TextStyle(
-                        color: AppColors.textHint, fontSize: 10),
+                        color: AppColors.textHintLight, fontSize: 10),
                   ),
                 const Spacer(),
                 if (isAssigned)
@@ -147,7 +154,7 @@ class RescueListTile extends StatelessWidget {
                   )
                 else
                   const Icon(Icons.arrow_forward_ios,
-                      size: 12, color: AppColors.textHint),
+                      size: 12, color: AppColors.textHintLight),
               ],
             ),
           ],

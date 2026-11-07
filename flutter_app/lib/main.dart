@@ -24,9 +24,9 @@ void main() async {
   // Set system UI overlay style
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
-    statusBarIconBrightness: Brightness.light,
-    systemNavigationBarColor: AppColors.background,
-    systemNavigationBarIconBrightness: Brightness.light,
+    statusBarIconBrightness: Brightness.dark,
+    systemNavigationBarColor: AppColors.backgroundLight,
+    systemNavigationBarIconBrightness: Brightness.dark,
   ));
 
   // Initialize flutter_local_notifications

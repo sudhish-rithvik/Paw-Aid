@@ -229,7 +229,7 @@ class _CaseDetailScreenState extends ConsumerState<CaseDetailScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           if (injuries.isNotEmpty) ...[
-                            const Text('Visible Injuries:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.white70)),
+                            const Text('Visible Injuries:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.textSecondaryLight)),
                             const SizedBox(height: 8),
                             Wrap(
                               spacing: 8,
@@ -254,11 +254,11 @@ class _CaseDetailScreenState extends ConsumerState<CaseDetailScreen> {
                           const SizedBox(height: 16),
                           const Divider(),
                           const SizedBox(height: 16),
-                          const Text('Recommended Action:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.white70)),
+                          const Text('Recommended Action:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.textSecondaryLight)),
                           const SizedBox(height: 4),
-                          Text(recommendedAction, style: const TextStyle(fontSize: 13, color: Colors.white)),
+                          Text(recommendedAction, style: const TextStyle(fontSize: 13, color: AppColors.textPrimaryLight)),
                           const SizedBox(height: 12),
-                          const Text('Diagnosis Rationale:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.white70)),
+                          const Text('Diagnosis Rationale:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.textSecondaryLight)),
                           const SizedBox(height: 4),
                           Text(reason, style: const TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.4)),
                         ],
@@ -435,7 +435,7 @@ class _CaseDetailScreenState extends ConsumerState<CaseDetailScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(label, style: const TextStyle(fontSize: 10, color: AppColors.textHint)),
-            Text(value, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white)),
+            Text(value, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textPrimaryLight)),
           ],
         ),
       ],

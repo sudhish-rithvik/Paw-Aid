@@ -9,7 +9,14 @@ import '../../../core/services/admin_service.dart';
 import '../../../core/theme/app_theme.dart';
 
 /// Live counter provider — reads total rescue cases from platform service.
-final _rescueCountProvider = FutureProvider<int>((ref) async { try { final stats = await AdminService.getPlatformStats(); return stats['total_rescued'] as int? ?? 119; } catch (_) { return 119; } });
+final _rescueCountProvider = FutureProvider<int>((ref) async {
+  try {
+    final stats = await AdminService.getPlatformStats();
+    return stats['total_rescued'] as int? ?? 119;
+  } catch (_) {
+    return 119;
+  }
+});
 
 class CitizenHomeScreen extends ConsumerStatefulWidget {
   const CitizenHomeScreen({super.key});
@@ -24,11 +31,11 @@ class _CitizenHomeScreenState extends ConsumerState<CitizenHomeScreen>
   late AnimationController _tickerController;
 
   final List<String> _recentRescues = [
-    '🐕 Dog rescued in Chennai — 8 min ago',
-    '🐈 Cat with broken leg — Bengaluru, 14 min ago',
-    '🐄 Injured cow on highway — Mumbai, 22 min ago',
-    '🦜 Injured bird near park — Delhi, 31 min ago',
-    '🐕 Stray pup accident victim — Pune, 45 min ago',
+    '🐕 Dog rescued in Besant Nagar — 8 min ago',
+    '🐈 Cat with limb injury — Royapuram, 14 min ago',
+    '🐄 Injured cow treated — Perambur, 22 min ago',
+    '🐕 Emaciated dog sheltered — Thiruvanmiyur, 31 min ago',
+    '🐕 Stray pup emergency care — Adyar, 45 min ago',
   ];
   int _tickerIndex = 0;
   Timer? _tickerTimer;
@@ -73,17 +80,18 @@ class _CitizenHomeScreenState extends ConsumerState<CitizenHomeScreen>
     final countAsync = ref.watch(_rescueCountProvider);
 
     return Scaffold(
+      backgroundColor: AppColors.cream,
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFF070B14),
-              AppColors.background,
-              Color(0xFF0F1826),
+              AppColors.cream,
+              Color(0xFFF8EED8),
+              AppColors.cream,
             ],
-            stops: [0, 0.5, 1],
+            stops: [0.0, 0.5, 1.0],
           ),
         ),
         child: SafeArea(
@@ -92,7 +100,7 @@ class _CitizenHomeScreenState extends ConsumerState<CitizenHomeScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
 
                 // ── Header ────────────────────────────────────────────────
                 Row(
@@ -101,39 +109,47 @@ class _CitizenHomeScreenState extends ConsumerState<CitizenHomeScreen>
                     Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(8),
+                          padding: const EdgeInsets.all(9),
                           decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(10),
+                            color: AppColors.mocha.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Icon(Icons.pets,
-                              color: AppColors.primary, size: 22),
+                              color: AppColors.mocha, size: 22),
                         ),
-                        const SizedBox(width: 10),
+                        const SizedBox(width: 12),
                         const Text(
                           'PAW-AID',
                           style: TextStyle(
-                            fontSize: 20,
+                            fontSize: 21,
                             fontWeight: FontWeight.w900,
-                            color: Colors.white,
+                            color: AppColors.mocha,
                             letterSpacing: 1.5,
                           ),
                         ),
                       ],
                     ),
-                    TextButton(
+                    TextButton.icon(
                       onPressed: () => context.go('/login'),
-                      child: const Text(
+                      icon: const Icon(Icons.login, size: 16, color: AppColors.mocha),
+                      label: const Text(
                         'Sign In',
                         style: TextStyle(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w600),
+                          color: AppColors.mocha,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 14,
+                        ),
+                      ),
+                      style: TextButton.styleFrom(
+                        backgroundColor: AppColors.sand.withOpacity(0.35),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       ),
                     ),
                   ],
                 ).animate().fadeIn(duration: 500.ms),
 
-                const SizedBox(height: 48),
+                const SizedBox(height: 40),
 
                 // ── Animated hero icon ────────────────────────────────────
                 Center(
@@ -144,12 +160,12 @@ class _CitizenHomeScreenState extends ConsumerState<CitizenHomeScreen>
                       height: 130 + _pulseController.value * 8,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: AppColors.primary
-                            .withOpacity(0.08 + _pulseController.value * 0.04),
+                        color: AppColors.mocha
+                            .withOpacity(0.08 + _pulseController.value * 0.05),
                         border: Border.all(
-                          color: AppColors.primary
-                              .withOpacity(0.2 + _pulseController.value * 0.15),
-                          width: 2,
+                          color: AppColors.mocha
+                              .withOpacity(0.25 + _pulseController.value * 0.15),
+                          width: 2.5,
                         ),
                       ),
                       child: child,
@@ -157,7 +173,7 @@ class _CitizenHomeScreenState extends ConsumerState<CitizenHomeScreen>
                     child: const Icon(
                       Icons.favorite,
                       size: 60,
-                      color: AppColors.primary,
+                      color: AppColors.mocha,
                     ),
                   ),
                 ).animate().scale(
@@ -165,7 +181,7 @@ class _CitizenHomeScreenState extends ConsumerState<CitizenHomeScreen>
                     duration: 700.ms,
                     curve: Curves.elasticOut),
 
-                const SizedBox(height: 32),
+                const SizedBox(height: 28),
 
                 // ── Headline ──────────────────────────────────────────────
                 const Text(
@@ -174,35 +190,43 @@ class _CitizenHomeScreenState extends ConsumerState<CitizenHomeScreen>
                   style: TextStyle(
                     fontSize: 38,
                     fontWeight: FontWeight.w900,
-                    color: Colors.white,
+                    color: AppColors.textPrimaryLight,
                     height: 1.15,
                     letterSpacing: -0.5,
                   ),
                 ).animate().fadeIn(delay: 200.ms, duration: 600.ms).slideY(
                     begin: 0.2, delay: 200.ms, duration: 600.ms),
 
-                const SizedBox(height: 16),
+                const SizedBox(height: 14),
 
                 const Text(
-                  'Photograph an injured animal and our AI instantly dispatches the nearest rescue team.',
+                  'Photograph an injured animal and our AI immediately coordinates verified rescue with the nearest local shelter.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 15,
-                    color: AppColors.textSecondary,
-                    height: 1.6,
+                    color: AppColors.textSecondaryLight,
+                    height: 1.55,
+                    fontWeight: FontWeight.w500,
                   ),
                 ).animate().fadeIn(delay: 400.ms, duration: 600.ms),
 
-                const SizedBox(height: 36),
+                const SizedBox(height: 32),
 
                 // ── Live counter card ─────────────────────────────────────
                 Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 20, vertical: 16),
+                      horizontal: 20, vertical: 18),
                   decoration: BoxDecoration(
-                    color: AppColors.surface,
+                    color: AppColors.white,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.cardBorder),
+                    border: Border.all(color: AppColors.cardBorderLight, width: 1.2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.mocha.withOpacity(0.06),
+                        blurRadius: 18,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -215,14 +239,14 @@ class _CitizenHomeScreenState extends ConsumerState<CitizenHomeScreen>
                         ),
                         'Active Rescues',
                         Icons.run_circle_outlined,
-                        AppColors.primary,
+                        AppColors.mocha,
                       ),
                       Container(
-                          width: 1, height: 40, color: AppColors.divider),
+                          width: 1, height: 42, color: AppColors.dividerLight),
                       _buildStatItem('98%', 'Success Rate',
-                          Icons.check_circle_outline, AppColors.secondary),
+                          Icons.check_circle_outline, AppColors.success),
                       Container(
-                          width: 1, height: 40, color: AppColors.divider),
+                          width: 1, height: 42, color: AppColors.dividerLight),
                       _buildStatItem('< 8 min', 'Avg Response',
                           Icons.timer_outlined, AppColors.high),
                     ],
@@ -233,20 +257,19 @@ class _CitizenHomeScreenState extends ConsumerState<CitizenHomeScreen>
 
                 // ── Live rescue ticker ────────────────────────────────────
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   decoration: BoxDecoration(
-                    color: AppColors.secondary.withOpacity(0.08),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                        color: AppColors.secondary.withOpacity(0.2)),
+                    color: AppColors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.borderLight, width: 1.2),
                   ),
                   child: Row(
                     children: [
                       Container(
-                        width: 8,
-                        height: 8,
+                        width: 9,
+                        height: 9,
                         decoration: const BoxDecoration(
-                          color: AppColors.secondary,
+                          color: AppColors.success,
                           shape: BoxShape.circle,
                         ),
                       )
@@ -263,9 +286,9 @@ class _CitizenHomeScreenState extends ConsumerState<CitizenHomeScreen>
                           child: Text(
                             _recentRescues[_tickerIndex],
                             style: const TextStyle(
-                              color: AppColors.secondary,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
+                              color: AppColors.textPrimaryLight,
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w600,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -276,28 +299,31 @@ class _CitizenHomeScreenState extends ConsumerState<CitizenHomeScreen>
                   ),
                 ).animate().fadeIn(delay: 700.ms, duration: 500.ms),
 
-                const SizedBox(height: 40),
+                const SizedBox(height: 32),
 
                 // ── Primary CTA ───────────────────────────────────────────
                 ElevatedButton(
                   onPressed: () => context.push('/report'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
+                    backgroundColor: AppColors.mocha,
+                    foregroundColor: AppColors.white,
                     padding: const EdgeInsets.symmetric(vertical: 18),
+                    elevation: 3,
+                    shadowColor: AppColors.mocha.withOpacity(0.35),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14)),
                   ),
                   child: const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.camera_alt, size: 20, color: Colors.white),
+                      Icon(Icons.camera_alt, size: 20, color: AppColors.white),
                       SizedBox(width: 12),
                       Text(
                         'REPORT INJURED ANIMAL',
                         style: TextStyle(
                           fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.white,
                           letterSpacing: 0.5,
                         ),
                       ),
@@ -315,7 +341,7 @@ class _CitizenHomeScreenState extends ConsumerState<CitizenHomeScreen>
                   onPressed: () => context.go('/login'),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    side: const BorderSide(color: AppColors.border, width: 1),
+                    side: const BorderSide(color: AppColors.mocha, width: 1.4),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14)),
                   ),
@@ -323,13 +349,13 @@ class _CitizenHomeScreenState extends ConsumerState<CitizenHomeScreen>
                     'SIGN IN TO YOUR PORTAL',
                     style: TextStyle(
                       fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.mocha,
                     ),
                   ),
                 ).animate().fadeIn(delay: 900.ms, duration: 500.ms),
 
-                const SizedBox(height: 32),
+                const SizedBox(height: 28),
 
                 // ── Feature pills ─────────────────────────────────────────
                 Wrap(
@@ -346,7 +372,7 @@ class _CitizenHomeScreenState extends ConsumerState<CitizenHomeScreen>
                   ],
                 ).animate().fadeIn(delay: 1000.ms, duration: 500.ms),
 
-                const SizedBox(height: 40),
+                const SizedBox(height: 36),
               ],
             ),
           ),
@@ -359,42 +385,49 @@ class _CitizenHomeScreenState extends ConsumerState<CitizenHomeScreen>
       String value, String label, IconData icon, Color color) {
     return Column(
       children: [
-        Icon(icon, color: color, size: 20),
+        Icon(icon, color: color, size: 22),
         const SizedBox(height: 6),
         Text(value,
             style: TextStyle(
-                color: color, fontWeight: FontWeight.w800, fontSize: 16)),
-        const SizedBox(height: 2),
+                color: color, fontWeight: FontWeight.w900, fontSize: 17)),
+        const SizedBox(height: 3),
         Text(label,
             style: const TextStyle(
-                color: AppColors.textHint,
-                fontSize: 10,
-                letterSpacing: 0.3)),
+                color: AppColors.textSecondaryLight,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.2)),
       ],
     );
   }
 
   Widget _buildFeaturePill(IconData icon, String label) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.surfaceVariant,
+        color: AppColors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.borderLight, width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.mocha.withOpacity(0.04),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: AppColors.textSecondary),
+          Icon(icon, size: 15, color: AppColors.mocha),
           const SizedBox(width: 6),
           Text(label,
               style: const TextStyle(
-                  color: AppColors.textSecondary,
+                  color: AppColors.textPrimaryLight,
                   fontSize: 12,
-                  fontWeight: FontWeight.w500)),
+                  fontWeight: FontWeight.w600)),
         ],
       ),
     );
   }
 }
-

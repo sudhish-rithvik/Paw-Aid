@@ -88,15 +88,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   Text(
                     'Join PAW-AID',
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimaryLight,
+                          fontWeight: FontWeight.w800,
                         ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Register as a citizen to track your reports, get live rescue updates, and volunteer to help.',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.textSecondary,
+                          color: AppColors.textSecondaryLight,
                         ),
                   ),
                   const SizedBox(height: 32),

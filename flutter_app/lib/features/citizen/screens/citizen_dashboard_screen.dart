@@ -69,7 +69,7 @@ class CitizenDashboardScreen extends ConsumerWidget {
                   return Text(
                     'Welcome back,\n$name',
                     style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                          color: Colors.white,
+                          color: AppColors.textPrimaryLight,
                           fontWeight: FontWeight.w800,
                         ),
                   );
@@ -89,7 +89,7 @@ class CitizenDashboardScreen extends ConsumerWidget {
                       end: Alignment.bottomRight,
                       colors: [
                         AppColors.primary,
-                        Color(0xFFE0531D),
+                        AppColors.primaryLight,
                       ],
                     ),
                   ),
@@ -99,14 +99,14 @@ class CitizenDashboardScreen extends ConsumerWidget {
                     children: [
                       const Row(
                         children: [
-                          Icon(Icons.report_problem, size: 28, color: Colors.white),
+                          Icon(Icons.report_problem, size: 28, color: AppColors.cream),
                           SizedBox(width: 12),
                           Text(
                             'Report Injured Animal',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                              color: AppColors.cream,
                             ),
                           ),
                         ],
@@ -114,14 +114,15 @@ class CitizenDashboardScreen extends ConsumerWidget {
                       const SizedBox(height: 12),
                       const Text(
                         'Report an animal in distress instantly. AI determines the injury severity and routes details to the nearest rescue team.',
-                        style: TextStyle(color: Colors.white70, fontSize: 13, height: 1.4),
+                        style: TextStyle(color: AppColors.sand, fontSize: 13, height: 1.4),
                       ),
                       const SizedBox(height: 20),
                       ElevatedButton(
                         onPressed: () => context.push('/report'),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
+                          backgroundColor: AppColors.cream,
                           foregroundColor: AppColors.primary,
+                          elevation: 2,
                         ),
                         child: const Row(
                           mainAxisSize: MainAxisSize.min,

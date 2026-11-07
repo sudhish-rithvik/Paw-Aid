@@ -25,16 +25,16 @@ class AIReportCard extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: AppColors.surfaceLight,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.cardBorder),
+          border: Border.all(color: AppColors.cardBorderLight, width: 1.2),
         ),
         child: const Row(
           children: [
-            Icon(Icons.hourglass_empty, color: AppColors.textHint, size: 20),
+            Icon(Icons.hourglass_empty, color: AppColors.textHintLight, size: 20),
             SizedBox(width: 12),
             Text('AI analysis pending on-device evaluation...',
-                style: TextStyle(color: AppColors.textSecondary)),
+                style: TextStyle(color: AppColors.textSecondaryLight)),
           ],
         ),
       );
@@ -48,9 +48,9 @@ class AIReportCard extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: AppColors.surfaceLight,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.cardBorder),
+          border: Border.all(color: AppColors.cardBorderLight, width: 1.2),
         ),
         child: const Row(
           children: [
@@ -61,7 +61,7 @@ class AIReportCard extends StatelessWidget {
             ),
             SizedBox(width: 12),
             Text('On-device LiteRT triage in progress...',
-                style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+                style: TextStyle(color: AppColors.textSecondaryLight, fontWeight: FontWeight.w600)),
           ],
         ),
       );
@@ -71,18 +71,18 @@ class AIReportCard extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: AppColors.surfaceLight,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.cardBorder),
+          border: Border.all(color: AppColors.cardBorderLight, width: 1.2),
         ),
         child: const Row(
           children: [
-            Icon(Icons.info_outline, color: AppColors.textHint, size: 20),
+            Icon(Icons.info_outline, color: AppColors.textHintLight, size: 20),
             SizedBox(width: 12),
             Expanded(
               child: Text(
                 'AI Model Unavailable: Local LiteRT/TFLite model weights (.tflite) not bundled in this build.',
-                style: TextStyle(color: AppColors.textHint, fontSize: 13),
+                style: TextStyle(color: AppColors.textHintLight, fontSize: 13),
               ),
             ),
           ],
@@ -104,7 +104,7 @@ class AIReportCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppColors.surfaceLight,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.secondary.withValues(alpha: 0.3)),
       ),
@@ -171,7 +171,7 @@ class AIReportCard extends StatelessWidget {
                         ),
                         const Text(
                           'confidence',
-                          style: TextStyle(color: AppColors.textHint, fontSize: 10),
+                          style: TextStyle(color: AppColors.textHintLight, fontSize: 10),
                         ),
                       ],
                     ),
@@ -231,7 +231,7 @@ class AIReportCard extends StatelessWidget {
                   child: Text(
                     'Preliminary emergency triage only. Not a veterinary medical diagnosis.',
                     style: TextStyle(
-                      color: AppColors.textHint,
+                      color: AppColors.textHintLight,
                       fontSize: 10,
                       fontWeight: FontWeight.w500,
                     ),
@@ -252,7 +252,7 @@ class AIReportCard extends StatelessWidget {
         Text(
           label.toUpperCase(),
           style: const TextStyle(
-            color: AppColors.textHint,
+            color: AppColors.textHintLight,
             fontSize: 9,
             letterSpacing: 1,
             fontWeight: FontWeight.w600,
@@ -268,7 +268,7 @@ class AIReportCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.surfaceVariant,
+        color: AppColors.surfaceVariantLight,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -276,12 +276,12 @@ class AIReportCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(icon, size: 12, color: AppColors.textHint),
+              Icon(icon, size: 12, color: AppColors.textHintLight),
               const SizedBox(width: 4),
               Text(
                 label.toUpperCase(),
                 style: const TextStyle(
-                  color: AppColors.textHint,
+                  color: AppColors.textHintLight,
                   fontSize: 9,
                   letterSpacing: 0.5,
                 ),
@@ -306,9 +306,9 @@ class AIReportCard extends StatelessWidget {
     return Container(
       height: 200,
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppColors.surfaceLight,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.cardBorder),
+        border: Border.all(color: AppColors.cardBorderLight, width: 1.2),
       ),
       child: const Center(child: CircularProgressIndicator()),
     );
