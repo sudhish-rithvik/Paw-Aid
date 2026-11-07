@@ -49,7 +49,7 @@ class ApprovalCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: status == 'pending'
-                ? AppColors.warning.withOpacity(0.3)
+                ? AppColors.warning.withValues(alpha: 0.3)
                 : AppColors.cardBorder,
           ),
         ),
@@ -73,10 +73,10 @@ class ApprovalCard extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.15),
+                    color: statusColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(
-                        color: statusColor.withOpacity(0.3)),
+                        color: statusColor.withValues(alpha: 0.3)),
                   ),
                   child: Text(
                     status.toUpperCase(),

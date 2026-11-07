@@ -57,4 +57,5 @@ enum CaseStatus {
 
 enum PriorityLevel { critical, high, medium, low }
 
+// ignore: constant_identifier_names
 enum UserRole { citizen, ngo_staff, admin }

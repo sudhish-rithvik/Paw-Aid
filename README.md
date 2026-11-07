@@ -163,12 +163,20 @@ flutter test
 
 ---
 
-## 📄 Migration Deliverables & Reports
+## 📄 Documentation & Architecture Deliverables
 
-Detailed technical documentation for each phase of the migration is available in the `migration/` directory:
-- [PART 1 — Backend Migration Audit](file:///d:/Projects/Paw-Aid/migration/PART_1_BACKEND_AUDIT.md)
-- [PART 2 — Complete Supabase & AWS Removal](file:///d:/Projects/Paw-Aid/migration/PART_2_REMOVAL_REPORT.md)
-- [PART 3 — Firebase Foundation Setup](file:///d:/Projects/Paw-Aid/migration/PART_3_FIREBASE_FOUNDATION.md)
-- [PART 4 — Firebase Auth & RBAC Architecture](file:///d:/Projects/Paw-Aid/migration/PART_4_AUTH_RBAC.md)
-- [PART 5 — Cloud Firestore Backend & Workflows](file:///d:/Projects/Paw-Aid/migration/PART_5_FIRESTORE_WORKFLOWS.md)
-- [PART 6 — Final Integration, AI & Validation Report](file:///d:/Projects/Paw-Aid/migration/PART_6_FINAL_VALIDATION.md)
+Technical documentation and migration specifications are structured cleanly in the [`docs/`](docs/) directory:
+- **Guides:**
+  - [Admin Provisioning Guide](docs/guides/ADMIN_PROVISIONING_GUIDE.md)
+- **Architecture:**
+  - [Firebase Architecture & RBAC Design](docs/architecture/FIREBASE_ARCHITECTURE_DESIGN.md)
+  - [Firestore Rules Implementation](docs/architecture/FIRESTORE_RULES_PROPOSED.md)
+  - [Firestore Schema Audit](docs/architecture/FIRESTORE_SCHEMA_AUDIT.md)
+  - [Flutter Migration Plan](docs/architecture/FLUTTER_MIGRATION_PLAN.md)
+- **Migration Milestones:**
+  - [Part 1: Backend Audit & Migration Blueprint](docs/migration/PART_1_BACKEND_AUDIT.md)
+  - [Part 2: Complete Backend Decommissioning](docs/migration/PART_2_REMOVAL_REPORT.md)
+  - [Part 3: Firebase Foundation & Zero-Billing](docs/migration/PART_3_FIREBASE_FOUNDATION.md)
+  - [Part 4: Firebase Auth & RBAC Architecture](docs/migration/PART_4_AUTH_RBAC.md)
+  - [Part 5: Cloud Firestore Schema & Lifecycle](docs/migration/PART_5_FIRESTORE_WORKFLOWS.md)
+  - [Part 6: Final Integration & AI Validation](docs/migration/PART_6_FINAL_VALIDATION.md)

@@ -170,7 +170,7 @@ class _BoundingBoxPainter extends CustomPainter {
       ..strokeWidth = 2.5;
 
     final fillPaint = Paint()
-      ..color = Colors.redAccent.withOpacity(0.2)
+      ..color = Colors.redAccent.withValues(alpha: 0.2)
       ..style = PaintingStyle.fill;
 
     for (final pred in predictions) {

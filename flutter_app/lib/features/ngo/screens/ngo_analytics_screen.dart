@@ -171,7 +171,7 @@ class NGOAnalyticsScreen extends ConsumerWidget {
           dotData: const FlDotData(show: true),
           belowBarData: BarAreaData(
             show: true,
-            color: AppColors.secondary.withOpacity(0.15),
+            color: AppColors.secondary.withValues(alpha: 0.15),
           ),
         ),
       ],

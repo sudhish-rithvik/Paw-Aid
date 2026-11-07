@@ -39,7 +39,7 @@ class RescueCard extends StatelessWidget {
           border: Border.all(color: AppColors.cardBorderLight, width: 1.2),
           boxShadow: [
             BoxShadow(
-              color: AppColors.mocha.withOpacity(0.05),
+              color: AppColors.mocha.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, 3),
             ),
@@ -56,10 +56,10 @@ class RescueCard extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: priorityColor.withOpacity(0.15),
+                    color: priorityColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(6),
                     border:
-                        Border.all(color: priorityColor.withOpacity(0.3)),
+                        Border.all(color: priorityColor.withValues(alpha: 0.3)),
                   ),
                   child: Text(
                     priority.toUpperCase(),

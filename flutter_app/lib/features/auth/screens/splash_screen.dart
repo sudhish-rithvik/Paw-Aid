@@ -34,10 +34,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
         _navigateByRole(bypassRole);
       } else {
         final user = await AuthService.getCurrentUser();
-        if (user != null) {
-          _navigateByRole(user.role);
-        } else {
-          context.go('/login');
+        if (mounted) {
+          if (user != null) {
+            _navigateByRole(user.role);
+          } else {
+            context.go('/login');
+          }
         }
       }
     } catch (_) {
@@ -170,5 +172,3 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     );
   }
 }
-
-MainAxisAlignment MainContentPosition() => MainAxisAlignment.center;

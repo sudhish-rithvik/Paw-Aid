@@ -81,7 +81,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
           ),
 
           // Corner decorations
-          Center(
+          const Center(
             child: SizedBox(
               width: 260,
               height: 260,
@@ -97,11 +97,11 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
           ),
 
           // Instruction
-          Positioned(
+          const Positioned(
             bottom: 80,
             left: 0,
             right: 0,
-            child: const Text(
+            child: Text(
               'Point at the rescue case QR code',
               textAlign: TextAlign.center,
               style: TextStyle(

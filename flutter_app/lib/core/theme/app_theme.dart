@@ -195,7 +195,6 @@ class AppTheme {
     );
 
     return baseTheme.copyWith(
-      useMaterial3: true,
       colorScheme: colorScheme,
       scaffoldBackgroundColor: backgroundColor,
       textTheme: textTheme,
@@ -366,7 +365,7 @@ class AppTheme {
 
       // Snackbar
       snackBarTheme: SnackBarThemeData(
-        backgroundColor: primaryDark,
+        backgroundColor: AppColors.primaryDark,
         contentTextStyle: GoogleFonts.outfit(color: AppColors.cream, fontWeight: FontWeight.w500),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         behavior: SnackBarBehavior.floating,
@@ -387,7 +386,7 @@ class AppTheme {
         }),
         trackColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return primary.withOpacity(0.35);
+            return primary.withValues(alpha: 0.35);
           }
           return surfaceContainerHighest;
         }),

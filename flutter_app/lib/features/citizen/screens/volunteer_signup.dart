@@ -70,7 +70,7 @@ class _VolunteerSignupScreenState
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: AppColors.success.withOpacity(0.1),
+                color: AppColors.success.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.favorite,
@@ -117,13 +117,13 @@ class _VolunteerSignupScreenState
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    AppColors.secondary.withOpacity(0.15),
-                    AppColors.secondary.withOpacity(0.05),
+                    AppColors.secondary.withValues(alpha: 0.15),
+                    AppColors.secondary.withValues(alpha: 0.05),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                    color: AppColors.secondary.withOpacity(0.2)),
+                    color: AppColors.secondary.withValues(alpha: 0.2)),
               ),
               child: const Column(
                 children: [
@@ -178,7 +178,7 @@ class _VolunteerSignupScreenState
 
             // NGO selector
             DropdownButtonFormField<String>(
-              value: _selectedNgoId,
+              initialValue: _selectedNgoId,
               decoration: const InputDecoration(
                 labelText: 'Preferred NGO (optional)',
                 prefixIcon: Icon(Icons.business_outlined),

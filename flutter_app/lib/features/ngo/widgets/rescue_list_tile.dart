@@ -49,14 +49,14 @@ class RescueListTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
           boxShadow: [
             BoxShadow(
-              color: AppColors.mocha.withOpacity(0.04),
+              color: AppColors.mocha.withValues(alpha: 0.04),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
           ],
           border: Border.all(
             color: isAssigned
-                ? AppColors.secondary.withOpacity(0.3)
+                ? AppColors.secondary.withValues(alpha: 0.3)
                 : AppColors.cardBorderLight,
             width: isAssigned ? 1.5 : 1,
           ),
@@ -82,7 +82,7 @@ class RescueListTile extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
+                      color: AppColors.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(

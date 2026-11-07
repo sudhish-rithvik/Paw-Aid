@@ -121,7 +121,7 @@ class _AllCasesScreenState extends ConsumerState<AllCasesScreen> {
                     // Status Dropdown
                     Expanded(
                       child: DropdownButtonFormField<String>(
-                        value: _selectedStatus,
+                        initialValue: _selectedStatus,
                         dropdownColor: AppColors.surface,
                         decoration: const InputDecoration(
                           labelText: 'Filter Status',
@@ -144,7 +144,7 @@ class _AllCasesScreenState extends ConsumerState<AllCasesScreen> {
                     // Severity Dropdown
                     Expanded(
                       child: DropdownButtonFormField<String>(
-                        value: _selectedSeverity,
+                        initialValue: _selectedSeverity,
                         dropdownColor: AppColors.surface,
                         decoration: const InputDecoration(
                           labelText: 'Filter Severity',
@@ -264,9 +264,9 @@ class _AllCasesScreenState extends ConsumerState<AllCasesScreen> {
                                             Container(
                                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                               decoration: BoxDecoration(
-                                                color: priorityColor.withOpacity(0.15),
+                                                color: priorityColor.withValues(alpha: 0.15),
                                                 borderRadius: BorderRadius.circular(6),
-                                                border: Border.all(color: priorityColor.withOpacity(0.3)),
+                                                border: Border.all(color: priorityColor.withValues(alpha: 0.3)),
                                               ),
                                               child: Text(
                                                 priority.toUpperCase(),

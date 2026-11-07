@@ -143,9 +143,9 @@ class _TrackRescueScreenState extends ConsumerState<TrackRescueScreen> {
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                     decoration: BoxDecoration(
-                                      color: priorityColor.withOpacity(0.15),
+                                      color: priorityColor.withValues(alpha: 0.15),
                                       borderRadius: BorderRadius.circular(6),
-                                      border: Border.all(color: priorityColor.withOpacity(0.3)),
+                                      border: Border.all(color: priorityColor.withValues(alpha: 0.3)),
                                     ),
                                     child: Text(
                                       priority.toUpperCase(),
@@ -293,7 +293,7 @@ class _TrackRescueScreenState extends ConsumerState<TrackRescueScreen> {
   }
 
   Widget _buildTimeline(CaseStatus currentStatus) {
-    final stages = CaseStatus.values;
+    const stages = CaseStatus.values;
     final currentIndex = stages.indexOf(currentStatus);
 
     return ListView.builder(

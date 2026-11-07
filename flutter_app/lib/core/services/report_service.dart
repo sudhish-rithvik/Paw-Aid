@@ -16,7 +16,7 @@ class ReportService {
 
   static const _uuid = Uuid();
   static const String _cacheKey = 'paw_aid_cached_reports';
-  static final PhotoStorageRepository _photoStorage = LocalPhotoStorageRepository();
+  static const PhotoStorageRepository _photoStorage = LocalPhotoStorageRepository();
   static final ReportRepository _reportRepository = FirestoreReportRepository();
 
   /// Complete Citizen Report Workflow:

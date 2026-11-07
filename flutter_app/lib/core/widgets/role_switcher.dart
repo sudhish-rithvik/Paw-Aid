@@ -39,7 +39,7 @@ class RoleSwitcherButton extends ConsumerWidget {
             const Icon(Icons.arrow_drop_down, size: 16, color: Colors.white70),
           ],
         ),
-        backgroundColor: badgeColor.withOpacity(0.85),
+        backgroundColor: badgeColor.withValues(alpha: 0.85),
         side: BorderSide(color: badgeColor, width: 1),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
@@ -68,7 +68,7 @@ class RoleSwitcherButton extends ConsumerWidget {
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: AppColors.textHintLight.withOpacity(0.5),
+                      color: AppColors.textHintLight.withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -191,7 +191,7 @@ class RoleSwitcherButton extends ConsumerWidget {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: isSelected ? color.withOpacity(0.12) : AppColors.surfaceVariantLight,
+          color: isSelected ? color.withValues(alpha: 0.12) : AppColors.surfaceVariantLight,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected ? color : AppColors.borderLight,
@@ -204,7 +204,7 @@ class RoleSwitcherButton extends ConsumerWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.2),
+                color: color.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: color, size: 22),

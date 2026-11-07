@@ -190,9 +190,9 @@ class _CaseDetailScreenState extends ConsumerState<CaseDetailScreen> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: priorityColor.withOpacity(0.15),
+                              color: priorityColor.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(6),
-                              border: Border.all(color: priorityColor.withOpacity(0.3)),
+                              border: Border.all(color: priorityColor.withValues(alpha: 0.3)),
                             ),
                             child: Text(
                               priority.toUpperCase(),
@@ -357,7 +357,7 @@ class _CaseDetailScreenState extends ConsumerState<CaseDetailScreen> {
                           ),
                           if (_isLoadingRoute)
                             Container(
-                              color: Colors.black.withOpacity(0.3),
+                              color: Colors.black.withValues(alpha: 0.3),
                               child: const Center(child: CircularProgressIndicator()),
                             ),
                         ],

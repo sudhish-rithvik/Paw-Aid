@@ -233,8 +233,8 @@ class _NGORegistrationScreenState extends State<NGORegistrationScreen> {
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: AppColors.critical.withOpacity(0.15),
-                              border: Border.all(color: AppColors.critical.withOpacity(0.3)),
+                              color: AppColors.critical.withValues(alpha: 0.15),
+                              border: Border.all(color: AppColors.critical.withValues(alpha: 0.3)),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Row(
@@ -466,7 +466,7 @@ class _NGORegistrationScreenState extends State<NGORegistrationScreen> {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                value: _operatingHours,
+                initialValue: _operatingHours,
                 decoration: const InputDecoration(
                   labelText: 'Operating Hours',
                   prefixIcon: Icon(Icons.access_time),
@@ -592,7 +592,7 @@ class _NGORegistrationScreenState extends State<NGORegistrationScreen> {
                 width: 100,
                 height: 100,
                 decoration: BoxDecoration(
-                  color: AppColors.secondary.withOpacity(0.1),
+                  color: AppColors.secondary.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.verified_outlined, size: 56, color: AppColors.secondary),

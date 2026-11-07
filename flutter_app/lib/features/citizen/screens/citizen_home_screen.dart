@@ -111,7 +111,7 @@ class _CitizenHomeScreenState extends ConsumerState<CitizenHomeScreen>
                         Container(
                           padding: const EdgeInsets.all(9),
                           decoration: BoxDecoration(
-                            color: AppColors.mocha.withOpacity(0.12),
+                            color: AppColors.mocha.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Icon(Icons.pets,
@@ -141,7 +141,7 @@ class _CitizenHomeScreenState extends ConsumerState<CitizenHomeScreen>
                         ),
                       ),
                       style: TextButton.styleFrom(
-                        backgroundColor: AppColors.sand.withOpacity(0.35),
+                        backgroundColor: AppColors.sand.withValues(alpha: 0.35),
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       ),
@@ -161,10 +161,10 @@ class _CitizenHomeScreenState extends ConsumerState<CitizenHomeScreen>
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: AppColors.mocha
-                            .withOpacity(0.08 + _pulseController.value * 0.05),
+                            .withValues(alpha: 0.08 + _pulseController.value * 0.05),
                         border: Border.all(
                           color: AppColors.mocha
-                              .withOpacity(0.25 + _pulseController.value * 0.15),
+                              .withValues(alpha: 0.25 + _pulseController.value * 0.15),
                           width: 2.5,
                         ),
                       ),
@@ -222,7 +222,7 @@ class _CitizenHomeScreenState extends ConsumerState<CitizenHomeScreen>
                     border: Border.all(color: AppColors.cardBorderLight, width: 1.2),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.mocha.withOpacity(0.06),
+                        color: AppColors.mocha.withValues(alpha: 0.06),
                         blurRadius: 18,
                         offset: const Offset(0, 4),
                       ),
@@ -309,7 +309,7 @@ class _CitizenHomeScreenState extends ConsumerState<CitizenHomeScreen>
                     foregroundColor: AppColors.white,
                     padding: const EdgeInsets.symmetric(vertical: 18),
                     elevation: 3,
-                    shadowColor: AppColors.mocha.withOpacity(0.35),
+                    shadowColor: AppColors.mocha.withValues(alpha: 0.35),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14)),
                   ),
@@ -410,7 +410,7 @@ class _CitizenHomeScreenState extends ConsumerState<CitizenHomeScreen>
         border: Border.all(color: AppColors.borderLight, width: 1.2),
         boxShadow: [
           BoxShadow(
-            color: AppColors.mocha.withOpacity(0.04),
+            color: AppColors.mocha.withValues(alpha: 0.04),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),

@@ -234,9 +234,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           width: 80,
                           height: 80,
                           decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.12),
+                            color: AppColors.primary.withValues(alpha: 0.12),
                             shape: BoxShape.circle,
-                            border: Border.all(color: AppColors.primary.withOpacity(0.25), width: 2),
+                            border: Border.all(color: AppColors.primary.withValues(alpha: 0.25), width: 2),
                           ),
                           child: const Icon(
                             Icons.pets,
@@ -271,8 +271,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       padding: const EdgeInsets.all(12),
                       margin: const EdgeInsets.only(bottom: 20),
                       decoration: BoxDecoration(
-                        color: AppColors.critical.withOpacity(0.15),
-                        border: Border.all(color: AppColors.critical.withOpacity(0.3)),
+                        color: AppColors.critical.withValues(alpha: 0.15),
+                        border: Border.all(color: AppColors.critical.withValues(alpha: 0.3)),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
@@ -498,9 +498,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.08),
+          color: color.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.35), width: 1.2),
+          border: Border.all(color: color.withValues(alpha: 0.35), width: 1.2),
         ),
         child: Row(
           children: [
@@ -508,7 +508,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               width: 38,
               height: 38,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.2),
+                color: color.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: color, size: 20),
@@ -532,7 +532,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: color.withOpacity(0.2),
+                          color: color.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: const Text(

@@ -144,7 +144,7 @@ void main() {
     });
 
     test('NGO: Pending registration requires administrator approval', () {
-      final ngo = NgoModel(
+      const ngo = NgoModel(
         id: 'ngo-pending-01',
         name: 'Blue Cross Animals',
         registrationNumber: 'REG-12345',
@@ -160,7 +160,7 @@ void main() {
       expect(ngo.isApproved, isFalse);
       expect(ngo.status, equals('pending'));
 
-      final approvedNgo = NgoModel(
+      const approvedNgo = NgoModel(
         id: 'ngo-approved-01',
         name: 'CARF Rescue',
         registrationNumber: 'REG-00001',

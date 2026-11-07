@@ -107,7 +107,7 @@ class _ActiveRescueScreenState extends ConsumerState<ActiveRescueScreen> {
                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white),
               ),
               const SizedBox(height: 8),
-              Text(
+              const Text(
                 'Upload a photo or add notes to notify the reporter.',
                 style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
               ),
@@ -249,7 +249,7 @@ class _ActiveRescueScreenState extends ConsumerState<ActiveRescueScreen> {
     final animal = aiAnalysis?['animal'] as String? ?? 'Animal';
 
     // Figure out the next stage
-    final stages = CaseStatus.values;
+    const stages = CaseStatus.values;
     final currentIndex = stages.indexOf(currentStatus);
     final CaseStatus? nextStatus = currentIndex < stages.length - 1 ? stages[currentIndex + 1] : null;
 
@@ -330,7 +330,7 @@ class _ActiveRescueScreenState extends ConsumerState<ActiveRescueScreen> {
                                 Container(
                                   padding: const EdgeInsets.all(10),
                                   decoration: BoxDecoration(
-                                    color: AppColors.primary.withOpacity(0.1),
+                                    color: AppColors.primary.withValues(alpha: 0.1),
                                     shape: BoxShape.circle,
                                   ),
                                   child: const Icon(Icons.person, color: AppColors.primary),
@@ -377,9 +377,9 @@ class _ActiveRescueScreenState extends ConsumerState<ActiveRescueScreen> {
                           Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: AppColors.secondary.withOpacity(0.1),
+                              color: AppColors.secondary.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: AppColors.secondary.withOpacity(0.3)),
+                              border: Border.all(color: AppColors.secondary.withValues(alpha: 0.3)),
                             ),
                             child: const Row(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -412,7 +412,7 @@ class _ActiveRescueScreenState extends ConsumerState<ActiveRescueScreen> {
   }
 
   Widget _buildTimeline(CaseStatus currentStatus) {
-    final stages = CaseStatus.values;
+    const stages = CaseStatus.values;
     final currentIndex = stages.indexOf(currentStatus);
 
     return ListView.builder(

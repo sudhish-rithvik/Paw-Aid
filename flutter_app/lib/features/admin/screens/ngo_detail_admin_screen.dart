@@ -244,7 +244,7 @@ class _NGODetailAdminScreenState extends ConsumerState<NGODetailAdminScreen> {
                         const Divider(height: 24),
                         _buildDetailRow('Active Volunteers', '$volunteers volunteers', Icons.people_outline),
                         const Divider(height: 24),
-                        _buildDetailRow('Service Radius', '${radius} km coverage', Icons.explore_outlined),
+                        _buildDetailRow('Service Radius', '$radius km coverage', Icons.explore_outlined),
                         const Divider(height: 24),
                         _buildDetailRow('Operating Hours', '$hours', Icons.access_time),
                       ],
@@ -377,7 +377,7 @@ class _NGODetailAdminScreenState extends ConsumerState<NGODetailAdminScreen> {
           ),
           if (_isProcessing)
             Container(
-              color: Colors.black.withOpacity(0.5),
+              color: Colors.black.withValues(alpha: 0.5),
               child: const Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,

@@ -74,8 +74,8 @@ class AdminDashboardScreen extends ConsumerWidget {
                     margin: const EdgeInsets.only(bottom: 24),
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppColors.warning.withOpacity(0.15),
-                      border: Border.all(color: AppColors.warning.withOpacity(0.3)),
+                      color: AppColors.warning.withValues(alpha: 0.15),
+                      border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(

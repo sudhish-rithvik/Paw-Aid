@@ -12,7 +12,7 @@ class StatusTimeline extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final stages = CaseStatus.values;
+    const stages = CaseStatus.values;
     final currentIndex = stages.indexOf(currentStatus);
 
     return Column(
@@ -58,7 +58,7 @@ class StatusTimeline extends StatelessWidget {
                       boxShadow: isCurrent
                           ? [
                               BoxShadow(
-                                color: AppColors.primary.withOpacity(0.4),
+                                color: AppColors.primary.withValues(alpha: 0.4),
                                 blurRadius: 8,
                                 spreadRadius: 2,
                               )

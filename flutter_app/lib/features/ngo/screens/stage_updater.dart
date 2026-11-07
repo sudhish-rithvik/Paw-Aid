@@ -106,7 +106,7 @@ class _StageUpdaterScreenState extends ConsumerState<StageUpdaterScreen> {
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: AppColors.success.withOpacity(0.1),
+              color: AppColors.success.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.check_circle,
@@ -153,7 +153,7 @@ class _StageUpdaterScreenState extends ConsumerState<StageUpdaterScreen> {
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? AppColors.primary.withOpacity(0.1)
+                      ? AppColors.primary.withValues(alpha: 0.1)
                       : AppColors.surface,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(

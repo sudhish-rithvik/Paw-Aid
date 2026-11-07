@@ -166,8 +166,8 @@ class _ReportAnimalScreenState extends ConsumerState<ReportAnimalScreen> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: AppColors.critical.withOpacity(0.15),
-                        border: Border.all(color: AppColors.critical.withOpacity(0.3)),
+                        color: AppColors.critical.withValues(alpha: 0.15),
+                        border: Border.all(color: AppColors.critical.withValues(alpha: 0.3)),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
@@ -283,7 +283,7 @@ class _ReportAnimalScreenState extends ConsumerState<ReportAnimalScreen> {
             top: 8,
             right: 8,
             child: CircleAvatar(
-              backgroundColor: Colors.black.withOpacity(0.6),
+              backgroundColor: Colors.black.withValues(alpha: 0.6),
               child: IconButton(
                 icon: const Icon(Icons.close, color: Colors.white),
                 onPressed: () => setState(() => _imageFile = null),
@@ -350,7 +350,7 @@ class _ReportAnimalScreenState extends ConsumerState<ReportAnimalScreen> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: (_currentLocation != null ? AppColors.secondary : AppColors.warning).withOpacity(0.15),
+              color: (_currentLocation != null ? AppColors.secondary : AppColors.warning).withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
             child: Icon(
