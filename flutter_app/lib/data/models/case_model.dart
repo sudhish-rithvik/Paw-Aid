@@ -86,7 +86,9 @@ class RescueCaseModel {
         assignedNgoId: map['assignedNgoId'] ?? map['assigned_ngo_id'] ?? ai?['assignedNgoId'],
         assignedNgoName: map['assignedNgoName'] ?? map['ngo_name'] ?? ai?['assignedNgoName'],
         photoBase64: map['photoBase64'],
-        imageUrl: map['photoBase64'] ?? map['imageUrl'] ?? map['image_path'] ?? map['photoReference'],
+        imageUrl: (map['photoReference'] != null && map['photoReference'].toString().startsWith('http'))
+            ? map['photoReference'].toString()
+            : (map['photoBase64'] ?? map['imageUrl'] ?? map['image_path'] ?? map['photoReference']),
         aiAnalysis: ai,
         createdAt: map['createdAt'] != null
             ? DateTime.tryParse(map['createdAt'].toString()) ?? DateTime.now()

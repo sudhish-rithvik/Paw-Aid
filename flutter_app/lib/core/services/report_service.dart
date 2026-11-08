@@ -16,7 +16,7 @@ class ReportService {
 
   static const _uuid = Uuid();
   static const String _cacheKey = 'paw_aid_cached_reports';
-  static const PhotoStorageRepository _photoStorage = LocalPhotoStorageRepository();
+  static const PhotoStorageRepository _photoStorage = CloudinaryPhotoStorageRepository();
   static final ReportRepository _reportRepository = FirestoreReportRepository();
 
   /// Complete Citizen Report Workflow:
@@ -83,7 +83,9 @@ class ReportService {
       longitude: longitude,
       address: address ?? 'Chennai, Tamil Nadu',
       photoReference: photoRef,
-      photoUploadStatus: PhotoUploadStatus.pendingStorageProvider,
+      photoUploadStatus: photoRef.startsWith('http')
+          ? PhotoUploadStatus.uploaded
+          : PhotoUploadStatus.pendingStorageProvider,
       reportStatus: ReportStatus.newReport,
       aiAnalysis: aiAnalysis,
       createdAt: now,

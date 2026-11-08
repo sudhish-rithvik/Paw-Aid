@@ -198,7 +198,9 @@ class ReportModel {
       latitude: (latNum as num).toDouble(),
       longitude: (lngNum as num).toDouble(),
       address: map['address'] ?? ai?['address'] ?? 'Chennai, Tamil Nadu',
-      photoReference: map['photoBase64'] ?? map['photoReference'] ?? map['imageUrl'] ?? map['image_path'],
+      photoReference: (map['photoReference'] != null && map['photoReference'].toString().startsWith('http'))
+          ? map['photoReference'].toString()
+          : (map['photoBase64'] ?? map['photoReference'] ?? map['imageUrl'] ?? map['image_path']),
       photoUploadStatus: upStatus,
       assignedNgoId: map['assignedNgoId'] ?? map['assigned_ngo_id'] ?? ai?['assignedNgoId'],
       assignedNgoName: map['assignedNgoName'] ?? map['ngo_name'] ?? ai?['assignedNgoName'],
