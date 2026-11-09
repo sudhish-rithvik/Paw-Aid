@@ -22,12 +22,12 @@ class AppConfig {
   // 3. Set "Signing Mode" to "Unsigned" and give it a name (e.g. "paw_aid_cases").
   static const String cloudinaryCloudName = String.fromEnvironment(
     'CLOUDINARY_CLOUD_NAME',
-    defaultValue: 'paw-aid-demo', // Replace with your Cloudinary Cloud Name
+    defaultValue: 'lrxxgm5n', // Configured Cloudinary Cloud Name
   );
 
   static const String cloudinaryUploadPreset = String.fromEnvironment(
     'CLOUDINARY_UPLOAD_PRESET',
-    defaultValue: 'paw_aid_cases', // Replace with your Unsigned Upload Preset
+    defaultValue: 'paw_aid_cases', // Unsigned Upload Preset
   );
 
   static const String cloudinaryFolder = 'paw_aid_reports';
