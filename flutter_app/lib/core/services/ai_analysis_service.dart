@@ -1,13 +1,14 @@
 // lib/core/services/ai_analysis_service.dart
 import '../../services/ai/animal_triage_service.dart';
+import '../../services/ai/hybrid_animal_triage_service.dart';
 
 /// AI Analysis Service
 /// Provides veterinary vision triage, injury classification, and severity scoring.
-/// Uses on-device inference abstraction (LiteRT / TensorFlow Lite compatible).
+/// Uses Option 3 Hybrid Architecture: Gemini 2.0 Flash (Online) + LiteRT/Local (Offline Fallback).
 class AIAnalysisService {
   AIAnalysisService._();
 
-  static const AnimalTriageService _triageService = LocalAnimalTriageService();
+  static const AnimalTriageService _triageService = HybridAnimalTriageService();
 
   /// Trigger AI analysis for an animal distress report
   static Future<Map<String, dynamic>> triggerAIAnalysis(

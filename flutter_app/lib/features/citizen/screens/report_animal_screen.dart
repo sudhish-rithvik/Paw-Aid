@@ -412,14 +412,14 @@ class _ReportAnimalScreenState extends ConsumerState<ReportAnimalScreen> {
               'Submitting Report...',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: AppColors.textPrimaryLight,
                   ),
             ),
             const SizedBox(height: 12),
             const Text(
-              'Uploading image and starting the AI Analysis pipeline. Please wait, do not close the app.',
+              'Uploading photo to Cloudinary CDN and analyzing injuries via Hybrid AI Triage. Please wait, do not close the app.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.textSecondary, height: 1.4),
+              style: TextStyle(color: AppColors.textSecondaryLight, height: 1.4),
             ),
           ],
         ),

@@ -38,4 +38,18 @@ class AppConfig {
       cloudinaryUploadPreset.isNotEmpty &&
       cloudinaryCloudName != 'YOUR_CLOUD_NAME' &&
       cloudinaryUploadPreset != 'YOUR_UPLOAD_PRESET';
+
+  // ── Gemini 2.0 Flash Configuration (Option 3 Primary AI Triage) ─────────────
+  // Free Developer Tier via Google AI Studio (https://aistudio.google.com)
+  // Zero cloud billing, zero credit card, 15 RPM / 1,500 RPD free.
+  static const String geminiApiKey = String.fromEnvironment(
+    'GEMINI_API_KEY',
+    defaultValue: '', // Paste your free Google AI Studio key or pass via --dart-define
+  );
+
+  /// Returns true if Gemini API key is configured
+  static bool get isGeminiConfigured =>
+      geminiApiKey.isNotEmpty &&
+      geminiApiKey != 'YOUR_GEMINI_API_KEY' &&
+      geminiApiKey.startsWith('AIza');
 }
